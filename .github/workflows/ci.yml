@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel any in-progress run for the same branch/PR to avoid wasting CI minutes
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  BUN_VERSION: "1"
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+            frontend/node_modules
+          key: bun-frontend-${{ runner.os }}-${{ hashFiles('bun.lock', 'frontend/package.json') }}
+          restore-keys: |
+            bun-frontend-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build SDK
+        run: cd sdk && bun run build
+
+      - name: Typecheck
+        run: cd frontend && bun run typecheck
+
+      - name: Build
+        run: cd frontend && bun run build
+        env:
+          VITE_RPC_URL: ${{ secrets.VITE_RPC_URL }}
+          VITE_ASP_URL: ${{ secrets.VITE_ASP_URL }}
+          VITE_SOLANA_CLUSTER: ${{ secrets.VITE_SOLANA_CLUSTER }}
+          VITE_RELAYER_ADDRESS: ${{ secrets.VITE_RELAYER_ADDRESS }}
+          VITE_POOL_PROGRAM_ID: ${{ secrets.VITE_POOL_PROGRAM_ID }}
+          VITE_COORDINATOR_PROGRAM_ID: ${{ secrets.VITE_COORDINATOR_PROGRAM_ID }}
+
+  sdk:
+    name: SDK
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-sdk-${{ runner.os }}-${{ hashFiles('bun.lock', 'sdk/package.json') }}
+          restore-keys: |
+            bun-sdk-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: cd sdk && bun run lint
+
+      - name: Test
+        run: cd sdk && bun run test
+
+  contracts:
+    name: Contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: contracts/anchor
+
+      - name: Check
+        run: cd contracts/anchor && cargo check
+
+      - name: Lint (Clippy)
+        run: cd contracts/anchor && cargo clippy -- -D warnings
+
+      - name: Test
+        run: cd contracts/anchor && cargo test
+
+  asp:
+    name: ASP
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: asp
+
+      - name: Cache bun dependencies (circuits)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            circuits/node_modules
+          key: bun-circuits-${{ runner.os }}-${{ hashFiles('circuits/bun.lock', 'circuits/package.json') }}
+          restore-keys: |
+            bun-circuits-${{ runner.os }}-
+
+      - name: Install circuit dependencies
+        run: cd circuits && bun install --frozen-lockfile
+
+      - name: Lint (Clippy)
+        run: cd asp && cargo clippy -- -D warnings
+
+      - name: Test
+        run: cd asp && cargo test
+
