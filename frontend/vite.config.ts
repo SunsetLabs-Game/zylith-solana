@@ -1,0 +1,48 @@
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import nodePath from "path";
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": nodePath.resolve(__dirname, "./src"),
+      "@zylith/sdk": nodePath.resolve(__dirname, "../sdk/src"),
+      // Stub Node.js builtins used by SDK's ClientProver (not executed in ASP mode)
+      path: nodePath.resolve(__dirname, "./src/stubs/node-builtins.ts"),
+      url: nodePath.resolve(__dirname, "./src/stubs/node-builtins.ts"),
+      "fs/promises": nodePath.resolve(__dirname, "./src/stubs/node-builtins.ts"),
+      assert: nodePath.resolve(__dirname, "./src/stubs/assert.ts"),
+      // Polyfill Node.js builtins used by SDK dependencies
+      buffer: "buffer",
+      events: "events",
+      util: nodePath.resolve(__dirname, "./src/stubs/util.ts"),
+      stream: "stream-browserify",
+    },
+  },
+  define: {
+    "process.env": "{}",
+    global: "globalThis",
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: "globalThis",
+      },
+    },
+  },
+  build: {
+    chunkSizeWarningLimit: 4500,
+  },
+  server: {
+    port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        rewrite: (p: string) => p.replace(/^\/api/, ""),
+      },
+    },
+  },
+});

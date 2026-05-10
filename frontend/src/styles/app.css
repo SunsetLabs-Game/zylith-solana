@@ -1,0 +1,120 @@
+@import "tailwindcss";
+@import "./fonts.css";
+
+/*
+ * Solana Protocol Visual DNA
+ * Theme: Galactic Pulse (Strong Solana Brand - REFINED)
+ */
+
+@theme {
+  /* Solana Brand Colors - VIVID & HIGH CONTRAST */
+  --color-primary: #14F195;        /* Solana Green */
+  --color-accent: #9945FF;         /* Solana Purple */
+  --color-solana: #14F195;
+  --color-solana-purple: #9945FF;
+  --color-background: #000000;    /* Absolute Black for depth */
+  
+  --color-foreground: oklch(0.98 0.01 240);
+  --color-card: rgba(20, 20, 20, 0.4);
+  --color-card-foreground: oklch(0.98 0.01 240);
+  --color-popover: rgba(15, 15, 15, 0.98);
+  --color-popover-foreground: oklch(0.98 0.01 240);
+  
+  --color-secondary: rgba(30, 30, 30, 0.5);
+  --color-secondary-foreground: oklch(0.98 0.01 240);
+  --color-muted: rgba(40, 40, 40, 0.4);
+  --color-muted-foreground: oklch(0.6 0.02 240);
+  
+  --color-destructive: #FF4B4B;
+  --color-destructive-foreground: #FFFFFF;
+  
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-input: rgba(255, 255, 255, 0.04);
+  --color-ring: var(--color-accent);
+
+  /* Font Families */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-heading: "Outfit", "Inter", sans-serif;
+
+  /* Radius */
+  --radius-lg: 1.5rem;
+  --radius-md: 1rem;
+  --radius-sm: 0.5rem;
+
+  /* Animation */
+  --animate-progress-indeterminate: progress-indeterminate 1.5s ease-in-out infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-spin-slow: spin 8s linear infinite;
+}
+
+@layer base {
+  * {
+    @apply border-border/40 outline-ring/50;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    position: relative;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* Global Solana Noise Layer */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+}
+
+@layer utilities {
+  .bg-solana-gradient {
+    /* Strong Mesh Gradient - RESTORED VIBRANCY */
+    background: 
+      radial-gradient(at 0% 0%, rgba(153, 69, 255, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(20, 241, 149, 0.35) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(153, 69, 255, 0.4) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(20, 241, 149, 0.35) 0px, transparent 50%),
+      radial-gradient(at 50% 50%, rgba(153, 69, 255, 0.2) 0px, transparent 50%),
+      var(--color-background);
+  }
+
+  .text-solana {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-solana via-solana to-solana-purple;
+  }
+  
+  .glow-primary {
+    box-shadow: 0 0 60px rgba(20, 241, 149, 0.3);
+  }
+  
+  .glow-accent {
+    box-shadow: 0 0 60px rgba(153, 69, 255, 0.3);
+  }
+  
+  .grid-pattern {
+    background-image: 
+      linear-gradient(rgba(153, 69, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(153, 69, 255, 0.1) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+}
+
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(200%); }
+  100% { transform: translateX(-100%); }
+}
