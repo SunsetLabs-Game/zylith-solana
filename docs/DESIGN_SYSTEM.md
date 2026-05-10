@@ -1,4 +1,4 @@
-# Obsidian Core — Zylith Visual DNA
+# Obsidian Core: Zylith Visual DNA
 
 > The design language for Zylith's interface layer.
 > Not a theme. A discipline.
@@ -29,25 +29,25 @@ This is the single most important rule. Everything else follows from it.
 | Gold / warm metallic neutrals | 60% | Primary surfaces, visual atmosphere, brand presence |
 | Black / deep charcoals | 25% | Contrast, framing, fine detail, structural anchors |
 | Neutrals (soft ivories, muted taupes, smoke grays) | 14% | Text, secondary surfaces, dividers |
-| Red | 1% | Signal only — error, warning, critical state |
+| Red | 1% | Signal only: error, warning, critical state |
 
 If you exceed these proportions, the interface becomes ornamental.
 
 ### Gold Owns the Canvas
 
-Gold is not an accent anymore — it is the field the product lives in.
+Gold is not an accent anymore. It is the field the product lives in.
 
 Use it as the dominant visual presence. But never use loud, flat yellow. Work with two depth levels:
 
-- **Primary field** — muted brushed gold (`#C9A94E`, `#B8975A`, `#A7864D` or similar).
-- **Soft elevated surfaces** — lighter champagne or sand-gold variations with restrained contrast.
+- **Primary field**: muted brushed gold (`#C9A94E`, `#B8975A`, `#A7864D` or similar).
+- **Soft elevated surfaces**: lighter champagne or sand-gold variations with restrained contrast.
 
 Depth is not created with gloss or theatrical metallic effects.
 It is created with **subtle contrast**.
 
 The interface should feel like finely finished metal under controlled light.
 
-### Black Does Not Dominate — It Defines
+### Black Does Not Dominate. It Defines.
 
 Black now exists to sharpen the composition.
 
@@ -68,9 +68,9 @@ Black should feel like **lacquered precision**, not emptiness.
 
 If you use it too much, the system collapses back into a generic dark fintech aesthetic.
 
-**Tone guidance:** Avoid `#FFD700` (that is casino, not sophistication). Target muted, warm metallics — think `#C9A94E`, `#B8975A`, `#D6C08A`, or similar desaturated golds. The gold should feel calm, architectural, and expensive.
+**Tone guidance:** Avoid `#FFD700` (that is casino, not sophistication). Target muted, warm metallics: think `#C9A94E`, `#B8975A`, `#D6C08A`, or similar desaturated golds. The gold should feel calm, architectural, and expensive.
 
-### Red Is Not Identity — It Is Signal
+### Red Is Not Identity. It Is Signal.
 
 Red is never the protagonist.
 
@@ -89,7 +89,7 @@ Red is never the protagonist.
 
 Red is tension. And tension is used with purpose.
 
-**Critical rule:** Never combine red and gold in the same component. That looks heavy and baroque — the opposite of what we want.
+**Critical rule:** Never combine red and gold in the same component. That looks heavy and baroque, the opposite of what we want.
 
 ---
 
@@ -100,7 +100,7 @@ If the design is elegant but the typography is generic, everything collapses.
 ### Principles
 
 - Modern sans-serif. Clean geometry.
-- Medium weight as the base — not thin, not bold.
+- Medium weight as the base. Not thin, not bold.
 - Generous vertical spacing. Let lines breathe.
 - Elegance comes from **rhythm and air**, not from the font itself.
 
@@ -132,19 +132,19 @@ Luxury needs to breathe.
 
 - Padding inside components: generous, never tight.
 - Gaps between sections: large enough to create clear visual separation.
-- Cards and panels: float with space around them — never edge-to-edge unless intentional.
+- Cards and panels: float with space around them, never edge-to-edge unless intentional.
 - One piece of content per visual region. Avoid cognitive overload.
 
 ### Depth Model
 
 Build depth through **layering**, not shadows:
 
-1. **Canvas** — the broad muted gold field. Quiet, warm, controlled.
-2. **Surface** — the primary gold field.
-3. **Element** — champagne, sand, or muted metallic modules sitting inside that field.
-4. **Anchor** — black accents, typography, controls, and disciplined contrast points.
+1. **Canvas**: the broad muted gold field. Quiet, warm, controlled.
+2. **Surface**: the primary gold field.
+3. **Element**: champagne, sand, or muted metallic modules sitting inside that field.
+4. **Anchor**: black accents, typography, controls, and disciplined contrast points.
 
-Avoid drop shadows. If you must use them, they should be nearly invisible — a 1-2px soft blur at very low opacity. The palette should derive separation from tone, edge control, and material contrast.
+Avoid drop shadows. If you must use them, they should be nearly invisible: a 1-2px soft blur at very low opacity. The palette should derive separation from tone, edge control, and material contrast.
 
 ---
 
@@ -201,7 +201,7 @@ Obsidian Core does not perform. It transitions.
 - Duration: fast (150-250ms). Never slow or dramatic.
 - Easing: ease-out for entrances, ease-in for exits.
 - No bouncing, no spring physics, no flashy effects.
-- Loading states: minimal — a thin black progress bar, quiet spinner, or low-contrast tonal sweep.
+- Loading states: minimal. Use a thin black progress bar, quiet spinner, or low-contrast tonal sweep.
 
 If the animation draws attention to itself, it is wrong.
 

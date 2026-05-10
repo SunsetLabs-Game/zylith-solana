@@ -1,4 +1,4 @@
-# Zylith — Architecture
+# Zylith: Architecture
 
 This document describes the full architecture of the Zylith protocol: how the four layers interact, how data flows through a shielded operation, and why each design decision was made.
 
@@ -7,10 +7,10 @@ This document describes the full architecture of the Zylith protocol: how the fo
 ## Table of Contents
 
 - [System Overview](#system-overview)
-- [Layer 1 — Smart Contracts](#layer-1--smart-contracts)
-- [Layer 2 — Zero-Knowledge Circuits](#layer-2--zero-knowledge-circuits)
-- [Layer 3 — Anonymous Service Provider (ASP)](#layer-3--anonymous-service-provider-asp)
-- [Layer 4 — SDK](#layer-4--sdk)
+- [Layer 1: Smart Contracts](#layer-1-smart-contracts)
+- [Layer 2: Zero-Knowledge Circuits](#layer-2-zero-knowledge-circuits)
+- [Layer 3: Anonymous Service Provider (ASP)](#layer-3-anonymous-service-provider-asp)
+- [Layer 4: SDK](#layer-4-sdk)
 - [Frontend](#frontend)
 - [End-to-End Flow: Shielded Swap](#end-to-end-flow-shielded-swap)
 - [Security Model](#security-model)
@@ -48,7 +48,7 @@ User Browser
 
 ---
 
-## Layer 1 — Smart Contracts
+## Layer 1: Smart Contracts
 
 **Location:** `contracts/anchor/`  
 **Language:** Rust (Anchor framework)  
@@ -56,24 +56,24 @@ User Browser
 
 ### Accounts
 
-**`Coordinator`** — Global singleton.
+**`Coordinator`**: Global singleton.
 - Tracks the current Merkle root
 - Increments `next_leaf_index` on every deposit/commit
 - Holds a `paused` flag for emergency stops
 - Only a designated `root_submitter` can update the root
 
-**`Pool`** — One per token pair.
+**`Pool`**: One per token pair.
 - Stores token mint addresses (token0, token1)
 - Tracks tick range (`tick_lower`, `tick_upper`), fee tier, reserves
 - Maintains separate `shielded_balance_0` and `shielded_balance_1` for private liquidity
 - Holds custody token accounts (SPL Token PDAs)
 
-**`NullifierRecord`** — One per spent note.
+**`NullifierRecord`**: One per spent note.
 - Created when a nullifier is published (withdraw, swap, burn)
 - Presence = note already consumed
 - The program checks for the account's existence before accepting a proof
 
-**`CommitmentAccount`** — One per Merkle leaf.
+**`CommitmentAccount`**: One per Merkle leaf.
 - Stores the commitment hash
 - Indexed by `leaf_index`
 
@@ -97,7 +97,7 @@ This means **no off-chain coordinator can approve invalid state transitions**.
 
 ---
 
-## Layer 2 — Zero-Knowledge Circuits
+## Layer 2: Zero-Knowledge Circuits
 
 **Location:** `circuits/`  
 **Language:** Circom 2.2  
@@ -108,8 +108,8 @@ This means **no off-chain coordinator can approve invalid state transitions**.
 
 All circuits share these building blocks:
 
-- **Poseidon hash** — a ZK-friendly hash function; used for commitments and nullifier hashes
-- **MerkleTreeChecker** — verifies a leaf exists in the tree given a root and sibling path
+- **Poseidon hash**: a ZK-friendly hash function used for commitments and nullifier hashes
+- **MerkleTreeChecker**: verifies a leaf exists in the tree given a root and sibling path
 - **Commitment = Poseidon(secret, nullifier, amount_low, amount_high, token)**
 - **NullifierHash = Poseidon(secret, nullifier)**
 
@@ -183,11 +183,11 @@ root, positionNullifierHash, newCommitment0, newCommitment1,
 tickLower, tickUpper
 ```
 
-The position note is consumed (nullifier published) and two output notes are created — one per token.
+The position note is consumed (nullifier published) and two output notes are created, one for each token.
 
 ---
 
-## Layer 3 — Anonymous Service Provider (ASP)
+## Layer 3: Anonymous Service Provider (ASP)
 
 **Location:** `asp/`  
 **Language:** Rust (Tokio async, Axum HTTP)  
@@ -207,7 +207,7 @@ The ASP sits between the SDK and the Solana chain. It:
 
 Proof generation with snarkjs is CPU-intensive and can take several seconds. Running it in the browser is possible but degrades UX significantly. The ASP handles this work server-side, returning a compact proof object that the client submits on-chain.
 
-The ASP **never sees the user's secret or nullifier** — those are provided directly to the circuit by the SDK, inside the snarkjs worker. The ASP only receives the circuit's public inputs.
+The ASP **never sees the user's secret or nullifier**; those are provided directly to the circuit by the SDK, inside the snarkjs worker. The ASP only receives the circuit's public inputs.
 
 ### API Endpoints
 
@@ -241,7 +241,7 @@ The production Dockerfile is a multi-stage build:
 
 ---
 
-## Layer 4 — SDK
+## Layer 4: SDK
 
 **Location:** `sdk/`  
 **Package:** `@zylith/sdk`  
@@ -280,10 +280,10 @@ type Note = {
 
 ### Crypto Primitives
 
-- **Poseidon** (`crypto/poseidon.ts`) — ZK-friendly hash, compatible with the Circom implementation
-- **Pedersen commitment** (`crypto/commitment.ts`) — computes leaf commitments
-- **Merkle tree** (`crypto/merkle.ts`) — local Merkle tree for proof generation verification
-- **Encryption** (`crypto/encryption.ts`) — AES-GCM for local note storage
+- **Poseidon** (`crypto/poseidon.ts`): ZK-friendly hash, compatible with the Circom implementation
+- **Pedersen commitment** (`crypto/commitment.ts`): computes leaf commitments
+- **Merkle tree** (`crypto/merkle.ts`): local Merkle tree for proof generation verification
+- **Encryption** (`crypto/encryption.ts`): AES-GCM for local note storage
 
 ---
 
@@ -302,11 +302,11 @@ type Note = {
 
 ### Key Pages
 
-- **Swap** — slippage input, price impact display, token selector, real-time CLMM quote
-- **Shield** — deposit form with amount + token selection; withdrawal form with note selector
-- **Liquidity** — tick range selector with D3 chart, estimated fee projections
-- **Positions** — table of active LP positions with accrued fees
-- **Pool Browser** — searchable pool list with TVL, volume, fee APR
+- **Swap**: slippage input, price impact display, token selector, real-time CLMM quote
+- **Shield**: deposit form with amount + token selection; withdrawal form with note selector
+- **Liquidity**: tick range selector with D3 chart, estimated fee projections
+- **Positions**: table of active LP positions with accrued fees
+- **Pool Browser**: searchable pool list with TVL, volume, fee APR
 
 ### Design System
 

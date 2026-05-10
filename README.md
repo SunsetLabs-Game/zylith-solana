@@ -1,8 +1,12 @@
 # Zylith Protocol
 
+<p align="center">
+  <img src="assets/Sunset.png" alt="Zylith Protocol" width="200" />
+</p>
+
 > **Shielded Concentrated Liquidity Market Maker for Bitcoin wrappers and stablecoins on Solana.**
 
-Zylith brings financial privacy to DeFi without sacrificing performance. Built on Solana for high-throughput, low-latency execution, Zylith lets users deposit, swap, and provide liquidity — all without revealing amounts, identities, or positions on-chain.
+Zylith brings financial privacy to DeFi without sacrificing performance. Built on Solana for high-throughput, low-latency execution, Zylith lets users deposit, swap, and provide liquidity without revealing amounts, identities, or positions on-chain.
 
 ---
 
@@ -28,13 +32,13 @@ Zylith brings financial privacy to DeFi without sacrificing performance. Built o
 
 ## What is Zylith?
 
-Zylith is a **privacy-native Concentrated Liquidity Market Maker (CLMM)** that enables shielded trading and liquidity provisioning on Solana. Every user action — deposit, swap, mint, or burn — can be shielded behind a zero-knowledge proof that hides:
+Zylith is a **privacy-native Concentrated Liquidity Market Maker (CLMM)** that enables shielded trading and liquidity provisioning on Solana. Every user action (deposit, swap, mint, or burn) can be shielded behind a zero-knowledge proof that hides:
 
 - **Who** initiated the transaction
 - **How much** was moved
 - **Where** the funds originated
 
-Unlike mixers or obfuscation tools, Zylith integrates privacy at the protocol level. The CLMM logic, tick-range liquidity, and LP positions are all first-class, on-chain constructs — they simply operate over hidden state.
+Unlike mixers or obfuscation tools, Zylith integrates privacy at the protocol level. The CLMM logic, tick-range liquidity, and LP positions are all first-class, on-chain constructs; they simply operate over hidden state.
 
 Zylith is designed for Bitcoin wrappers (wBTC, cbBTC, tBTC) and stablecoins (USDT0, USDC), making it a natural privacy layer for the most liquid assets on Solana.
 
@@ -42,7 +46,7 @@ Zylith is designed for Bitcoin wrappers (wBTC, cbBTC, tBTC) and stablecoins (USD
 
 ## Why This Matters
 
-Public blockchains expose every transaction. For institutional traders, DeFi power users, and anyone who values financial privacy, this is a fundamental problem — not a minor inconvenience.
+Public blockchains expose every transaction. For institutional traders, DeFi power users, and anyone who values financial privacy, this is a fundamental problem, not a minor inconvenience.
 
 Existing privacy solutions on Solana either:
 - Sacrifice DeFi composability (mixers, tumblers)
@@ -51,7 +55,7 @@ Existing privacy solutions on Solana either:
 
 Zylith solves this by combining:
 
-1. **Groth16 zero-knowledge proofs** verified on-chain — no trusted intermediary required
+1. **Groth16 zero-knowledge proofs** verified on-chain, with no trusted intermediary required
 2. **Concentrated liquidity** (CLMM-style, like Uniswap v3) for capital efficiency
 3. **An Anonymous Service Provider** (ASP) that handles proof generation without ever learning private inputs
 4. **A published SDK** so any developer can build privacy-preserving DeFi applications on top
@@ -93,7 +97,7 @@ Zylith is organized into four independent, well-defined layers that compose into
 
 ## Project Milestones
 
-### Published SDK — `@zylith/sdk`
+### Published SDK: `@zylith/sdk`
 
 The Zylith TypeScript SDK is a fully standalone npm package that encapsulates all privacy primitives. Developers can integrate shielded operations into their own applications without rebuilding the cryptographic stack.
 
@@ -103,18 +107,18 @@ The SDK exposes:
 - **Poseidon hashing**, Pedersen commitments, and a 20-level Merkle tree
 - Type-safe operations for deposit, withdraw, swap, mint, and burn
 
-### ZK Circuit Suite — Circom 2.2 / Groth16
+### ZK Circuit Suite: Circom 2.2 / Groth16
 
 Four production-grade circuits power every shielded operation:
 
 | Circuit | Constraints | Purpose |
 |---------|-------------|---------|
 | `membership` | ~3,561 | Withdrawal: prove note ownership without revealing the note |
-| `swap` | — | Private swap: consume input note, produce output + change |
+| `swap` | ~5,200 | Private swap: consume input note, produce output + change |
 | `mint` (liquidity) | ~8,723 | Shielded LP: consume two notes, emit position commitment |
 | `burn` (liquidity) | ~4,611 | Redeem LP position: emit two token output notes |
 
-Each circuit enforces double-spend prevention via nullifier hashes. Proofs are verified on-chain using the `groth16-solana` Rust crate — no trusted party required.
+Each circuit enforces double-spend prevention via nullifier hashes. Proofs are verified on-chain using the `groth16-solana` Rust crate, with no trusted party required.
 
 The tree height is **20 levels**, supporting up to **1,048,576 simultaneous shielded notes**.
 
@@ -130,19 +134,19 @@ The ASP is a production-ready Rust backend that handles the heaviest responsibil
 
 Deployed on **Fly.io** with a persistent volume for the SQLite database, tolerating restarts without data loss.
 
-### Frontend — Obsidian Core Design System
+### Frontend: Obsidian Core Design System
 
-The Zylith frontend is a full DeFi application built around a bespoke design language called **Obsidian Core**: warm metallic golds, lacquered blacks, and precise typographic rhythm — designed to project financial authority without decoration.
+The Zylith frontend is a full DeFi application built around a bespoke design language called **Obsidian Core**: warm metallic golds, lacquered blacks, and precise typographic rhythm, designed to project financial authority without decoration.
 
 Pages and flows:
-- **Landing** — protocol overview and entry point
-- **Dashboard** — portfolio-level view of all shielded positions
-- **Swap** — shielded token exchange with real-time price impact
-- **Shield** — deposit and withdraw from the privacy pool
-- **Liquidity** — open and close concentrated liquidity positions
-- **Positions** — track active LP ranges and earned fees
-- **Pool Browser** — discover and analyze available pools
-- **Settings** — RPC configuration, proving mode, wallet preferences
+- **Landing**: protocol overview and entry point
+- **Dashboard**: portfolio-level view of all shielded positions
+- **Swap**: shielded token exchange with real-time price impact
+- **Shield**: deposit and withdraw from the privacy pool
+- **Liquidity**: open and close concentrated liquidity positions
+- **Positions**: track active LP ranges and earned fees
+- **Pool Browser**: discover and analyze available pools
+- **Settings**: RPC configuration, proving mode, wallet preferences
 
 State is managed with Zustand (wallet, SDK, UI). Charts are built with D3.
 
@@ -154,16 +158,16 @@ Zylith verifies Groth16 proofs entirely on-chain inside Anchor programs. No off-
 
 ## Key Features
 
-- **Shielded deposit** — lock tokens into a private note commitment recorded on-chain
-- **Shielded withdrawal** — redeem a note via membership proof; amount and ownership stay hidden
-- **Shielded swap** — trade inside the CLMM without revealing input/output amounts
-- **Shielded liquidity provision** — add liquidity to a tick range using two private notes
-- **Shielded LP withdrawal** — exit an LP position and receive two output notes
-- **Dual proving modes** — prove locally in the browser or delegate to the ASP
-- **CLMM with tick ranges** — capital-efficient liquidity, Uniswap v3-style
-- **Bitcoin-wrapper and stablecoin focus** — USDT0-first configuration
-- **Encrypted note persistence** — notes stored locally, encrypted, never sent to a server
-- **Nullifier double-spend protection** — each note can only be spent once
+- **Shielded deposit**: lock tokens into a private note commitment recorded on-chain
+- **Shielded withdrawal**: redeem a note via membership proof; amount and ownership stay hidden
+- **Shielded swap**: trade inside the CLMM without revealing input/output amounts
+- **Shielded liquidity provision**: add liquidity to a tick range using two private notes
+- **Shielded LP withdrawal**: exit an LP position and receive two output notes
+- **Dual proving modes**: prove locally in the browser or delegate to the ASP
+- **CLMM with tick ranges**: capital-efficient liquidity, Uniswap v3-style
+- **Bitcoin-wrapper and stablecoin focus**: USDT0-first configuration
+- **Encrypted note persistence**: notes stored locally, encrypted, never sent to a server
+- **Nullifier double-spend protection**: each note can only be spent once
 
 ---
 
@@ -283,7 +287,7 @@ bun run dev:all
 ## Project Structure
 
 ```
-solana-protocol/
+zylith-solana/
 ├── frontend/              # React 18 application (Vite + TailwindCSS)
 │   ├── src/
 │   │   ├── pages/         # Landing, Dashboard, Swap, Shield, Liquidity, Positions…
@@ -292,7 +296,7 @@ solana-protocol/
 │   │   └── lib/           # Utilities, RPC helpers, formatters
 │   └── vite.config.ts
 │
-├── sdk/                   # @zylith/sdk — published npm package
+├── sdk/                   # @zylith/sdk (published npm package)
 │   ├── src/
 │   │   ├── client.ts      # ZylithClient (ASP and client-side proving)
 │   │   ├── crypto/        # Poseidon, commitments, Merkle tree, encryption
@@ -314,7 +318,7 @@ solana-protocol/
 │
 ├── circuits/              # Circom 2.2 ZK circuits
 │   ├── membership.circom  # Withdrawal proof (~3,561 constraints)
-│   ├── swap.circom        # Private swap proof
+│   ├── swap.circom        # Private swap proof (~5,200 constraints)
 │   ├── liquidity.circom   # Mint (~8,723) and burn (~4,611) proofs
 │   └── build/             # Generated R1CS, WASM, proving keys
 │
@@ -445,4 +449,4 @@ Zylith is built by:
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT. See [LICENSE](LICENSE) for details.
