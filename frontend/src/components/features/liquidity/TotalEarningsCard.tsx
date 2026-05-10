@@ -4,7 +4,7 @@ import { useAllPositionsFees } from "@/hooks/useAllPositionsFees";
 import { useSdkStore } from "@/stores/sdkStore";
 import { formatTokenAmount } from "@/lib/format";
 import { TOKEN_0, TOKEN_1 } from "@/config/tokens";
-import { tokenToBigInt } from "@sunset/sdk";
+import { tokenToBigInt } from "@zylith/sdk";
 import { Coins, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
