@@ -52,6 +52,8 @@ solana-client = "1.18"
 solana-sdk = "1.18"
 solana-program = "1.18"
 anchor-client = "0.30"
+bs58 = "0.5.1"
+solana-transaction-status = "1.18"
 
 [dev-dependencies]
 axum-test = "18"

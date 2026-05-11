@@ -341,8 +341,8 @@ pub struct TreeStatus {
 
 #[derive(Debug, Serialize, ToSchema)]
 pub struct SyncStatus {
-    /// Last Solana slot number processed by the sync worker
-    pub last_synced_block: Option<u64>,
+    /// Last Solana transaction signature processed by the sync worker
+    pub last_synced_signature: Option<String>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]

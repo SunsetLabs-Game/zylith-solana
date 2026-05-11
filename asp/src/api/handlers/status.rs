@@ -5,7 +5,7 @@ use axum::Json;
 
 use crate::api::types::{ContractAddresses, StatusResponse, SyncStatus, TreeStatus};
 use crate::error::AspError;
-use crate::sync::solana::LAST_SYNCED_SLOT_KEY;
+use crate::sync::solana::LAST_SYNCED_SIG_KEY;
 use crate::AppState;
 
 #[utoipa::path(
@@ -25,11 +25,10 @@ pub async fn get_status(
     let leaf_count = state.db.get_leaf_count().unwrap_or(0);
     let root = state.db.get_latest_root().unwrap_or(None);
 
-    let last_synced_block = state
+    let last_synced_signature = state
         .db
-        .get_sync_state(LAST_SYNCED_SLOT_KEY)
-        .unwrap_or(None)
-        .and_then(|s| s.parse::<u64>().ok());
+        .get_sync_state(LAST_SYNCED_SIG_KEY)
+        .unwrap_or(None);
 
     // Check worker health via ping
     let worker_healthy = {
@@ -43,7 +42,7 @@ pub async fn get_status(
         healthy,
         version: env!("CARGO_PKG_VERSION").to_string(),
         tree: TreeStatus { leaf_count, root },
-        sync: SyncStatus { last_synced_block },
+        sync: SyncStatus { last_synced_signature },
         contracts: ContractAddresses {
             coordinator: state.config.coordinator_address.clone(),
             pool: state.config.pool_address.clone(),
