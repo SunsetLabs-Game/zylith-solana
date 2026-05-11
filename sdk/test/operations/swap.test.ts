@@ -31,8 +31,8 @@ describe("swap operation", () => {
       }),
       getTreePath: vi.fn().mockResolvedValue({
         root: "0xroot",
-        path: Array(32).fill("0"),
-        index: 0,
+        path_elements: Array(32).fill("0"),
+        path_indices: Array(32).fill(0),
       }),
       syncCommitments: vi.fn().mockResolvedValue({}),
     } as unknown as AspClient;
@@ -89,8 +89,8 @@ describe("swap operation", () => {
       }),
       getTreePath: vi.fn().mockResolvedValue({
         root: "0xroot",
-        path: Array(32).fill("0"),
-        index: 0,
+        path_elements: Array(32).fill("0"),
+        path_indices: Array(32).fill(0),
       }),
       syncCommitments: vi.fn().mockResolvedValue({}),
     } as unknown as AspClient;

@@ -194,7 +194,7 @@ export function SwapCard() {
           tokenIn: tokenIn.address,
           tokenOut: tokenOut.address,
           amountIn: parsedAmountIn,
-          amountOutMin: expectedOut,
+          amountOutMin: expectedOut * 9950n / 10000n, // 0.5% slippage tolerance
           expectedAmountOut: expectedOut,
           sqrtPriceLimit: priceLimit,
         },
