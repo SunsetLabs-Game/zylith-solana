@@ -18,6 +18,7 @@ import {
 import { Transaction, type TransactionInstruction } from "@solana/web3.js";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
+import { env } from "@/config/env";
 
 interface WalletContextValue {
   address: string | null;
@@ -116,7 +117,7 @@ function WalletInternalProvider({ children }: { children: ReactNode }) {
 }
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const endpoint = "https://api.devnet.solana.com";
+  const endpoint = env.rpcUrl;
 
   const wallets = useMemo(
     () => [
