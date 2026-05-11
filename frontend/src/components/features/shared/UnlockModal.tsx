@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useSdkStore } from "@/stores/sdkStore";
 
 interface UnlockModalProps {
   open: boolean;
@@ -12,6 +13,7 @@ interface UnlockModalProps {
 
 export function UnlockModal({ open, onSubmit, loading, error }: UnlockModalProps) {
   const [password, setPassword] = useState("");
+  const resetVault = useSdkStore((state) => state.resetVault);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,15 +39,33 @@ export function UnlockModal({ open, onSubmit, loading, error }: UnlockModalProps
           autoFocus
         />
 
-        <Button
-          type="submit"
-          variant="primary"
-          className="w-full"
-          disabled={password.length === 0 || loading}
-          loading={loading}
-        >
-          Unlock
-        </Button>
+        <div className="space-y-3 pt-2">
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full"
+            disabled={password.length === 0 || loading}
+            loading={loading}
+          >
+            Unlock
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                confirm(
+                  "This will permanently delete all local notes and settings. This action cannot be undone. Are you sure?"
+                )
+              ) {
+                resetVault();
+              }
+            }}
+            className="w-full text-xs text-red-500/70 hover:text-red-500 transition-colors py-1"
+          >
+            Forgotten password? Reset Vault
+          </button>
+        </div>
       </form>
     </Modal>
   );

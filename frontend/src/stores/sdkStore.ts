@@ -97,9 +97,19 @@ export const useSdkStore = create<SdkState>((set, get) => ({
       console.log("[SDK Store] Initialization complete!");
     } catch (err) {
       console.error("[SDK Store] Initialization failed:", err);
+      
+      let message = "Initialization failed";
+      if (err instanceof Error) {
+        if (err.name === "OperationError") {
+          message = "Incorrect password. Please try again.";
+        } else {
+          message = err.message;
+        }
+      }
+
       set({
         isInitializing: false,
-        initError: err instanceof Error ? err.message : "Initialization failed",
+        initError: message,
       });
     }
   },
