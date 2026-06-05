@@ -50,15 +50,16 @@ export function useDeposit() {
         });
 
         const commitmentHex = `0x${BigInt(prepared.commitment).toString(16)}`;
-        const txHash = await execute([
-          buildShieldedDepositTx({
-            poolAddress: env.contracts.pool,
-            tokenAddress: token,
-            amount,
-            commitment: commitmentHex,
-            ownerAddress: address,
-          }),
-        ]);
+        const txInstruction = await buildShieldedDepositTx({
+          poolAddress: env.contracts.pool,
+          tokenAddress: token,
+          amount,
+          commitment: commitmentHex,
+          ownerAddress: address,
+          coordinatorAddress: env.contracts.coordinator,
+        });
+        
+        const txHash = await execute([txInstruction]);
 
         await client.saveNotes();
         return { txHash, leafIndex: prepared.leafIndex, commitment: prepared.commitment };

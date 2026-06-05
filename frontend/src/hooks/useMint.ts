@@ -24,7 +24,7 @@ interface MintInput {
 export function useMint() {
   const client = useSdkStore((s) => s.client);
   const refreshBalances = useSdkStore((s) => s.refreshBalances);
-  const { execute } = useWalletSession();
+  const { execute, address } = useWalletSession();
   const { toast } = useToast();
 
   return useMutation({
@@ -32,6 +32,7 @@ export function useMint() {
       if (!client) throw new Error("SDK not initialized");
       if (!env.contracts.pool) throw new Error("Pool address is not configured");
       if (!env.contracts.coordinator) throw new Error("Coordinator address is not configured");
+      if (!address) throw new Error("Wallet not connected");
 
       const noteManager = client.getNoteManager();
       const snapshot = noteManager.snapshot();
@@ -39,8 +40,10 @@ export function useMint() {
       try {
         const result = await client.mint(input);
         const txHash = await execute([
-          buildShieldedMintTx({
+          await buildShieldedMintTx({
             poolAddress: env.contracts.pool,
+            coordinatorAddress: env.contracts.coordinator,
+            ownerAddress: address,
             proofData: result.calldata.join(","),
             liquidityDelta: input.liquidity,
           }),

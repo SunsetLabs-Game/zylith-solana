@@ -13,7 +13,7 @@ import { useSdkStore } from "@/stores/sdkStore";
 import { TESTNET_TOKENS, type Token } from "@/config/tokens";
 import { parseTokenAmount, formatTokenAmount, transactionExplorerUrl } from "@/lib/format";
 import { calculatePriceImpact, getPriceImpactVariant } from "@/lib/priceImpact";
-import { FEE_TIERS, estimateSwapOutputSafe, tokenToBigInt } from "@zylith/sdk";
+import { FEE_TIERS, estimateSwapOutputSafe, tokenToBigInt2 } from "@zylith/sdk";
 import type { Note, PoolKey } from "@zylith/sdk";
 import { cn } from "@/lib/cn";
 import { motion, AnimatePresence } from "motion/react";
@@ -84,8 +84,8 @@ export function SwapCard() {
 
   // Get pool state for price impact calculation
   const poolKey: PoolKey | null = tokenIn && tokenOut ? {
-    token0: tokenToBigInt(tokenIn.address) < tokenToBigInt(tokenOut.address) ? tokenIn.address : tokenOut.address,
-    token1: tokenToBigInt(tokenIn.address) < tokenToBigInt(tokenOut.address) ? tokenOut.address : tokenIn.address,
+    token0: tokenToBigInt2(tokenIn.address) < tokenToBigInt2(tokenOut.address) ? tokenIn.address : tokenOut.address,
+    token1: tokenToBigInt2(tokenIn.address) < tokenToBigInt2(tokenOut.address) ? tokenOut.address : tokenIn.address,
     fee: FEE_TIERS.MEDIUM.fee,
     tickSpacing: FEE_TIERS.MEDIUM.tickSpacing,
   } : null;
@@ -94,7 +94,7 @@ export function SwapCard() {
   // Estimate output amount with slippage buffer
   const estimatedOut = useMemo(() => {
     if (!poolState || parsedAmountIn === 0n || !tokenIn || !tokenOut) return 0n;
-    const zeroForOne = tokenToBigInt(tokenIn.address) < tokenToBigInt(tokenOut.address);
+    const zeroForOne = tokenToBigInt2(tokenIn.address) < tokenToBigInt2(tokenOut.address);
     return estimateSwapOutputSafe(poolState.sqrtPrice, parsedAmountIn, zeroForOne, FEE_TIERS.MEDIUM.fee);
   }, [poolState, parsedAmountIn, tokenIn, tokenOut]);
 
@@ -160,12 +160,12 @@ export function SwapCard() {
       if (!selectedNote) return;
 
       const [t0, t1] =
-        tokenToBigInt(tokenIn.address) < tokenToBigInt(tokenOut.address)
+        tokenToBigInt2(tokenIn.address) < tokenToBigInt2(tokenOut.address)
           ? [tokenIn.address, tokenOut.address]
           : [tokenOut.address, tokenIn.address];
 
       // Determine swap direction: zeroForOne = tokenIn is token0
-      const zeroForOne = tokenToBigInt(tokenIn.address) < tokenToBigInt(tokenOut.address);
+      const zeroForOne = tokenToBigInt2(tokenIn.address) < tokenToBigInt2(tokenOut.address);
 
       // Estimate expected output using current pool state with slippage buffer.
       let expectedOut = 0n;

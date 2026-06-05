@@ -178,7 +178,14 @@ export const useSdkStore = create<SdkState>((set, get) => ({
     const noteManager = client.getNoteManager();
     // Exclude placeholder notes from balance display — they are saved pre-swap
     // and will be updated with real amounts once the ASP responds.
-    const notes = noteManager.getUnspentNotes().filter((n: Note) => !n.commitment.startsWith("pending_"));
+    const notes = noteManager.getUnspentNotes().filter((n: Note) => {
+      try {
+        BigInt(n.amount);
+        return !n.commitment.startsWith("pending_");
+      } catch {
+        return false;
+      }
+    });
     const positions = noteManager.getUnspentPositions();
 
     // Compute balances per token

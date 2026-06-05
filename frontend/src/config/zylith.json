@@ -1,0 +1,1511 @@
+{
+  "address": "4CNqqTnGEMYqWkE4VCS7cRy3tAJcrPGGMvM9dyFmJwp9",
+  "metadata": {
+    "name": "zylith",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Zylith Protocol Solana Program"
+  },
+  "instructions": [
+    {
+      "name": "collect_protocol_fees",
+      "discriminator": [
+        22,
+        67,
+        23,
+        98,
+        150,
+        178,
+        70,
+        220
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "pool_pda",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool.token0",
+                "account": "PoolState"
+              },
+              {
+                "kind": "account",
+                "path": "pool.token1",
+                "account": "PoolState"
+              },
+              {
+                "kind": "account",
+                "path": "pool.fee",
+                "account": "PoolState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_recipient",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pool_token0",
+          "writable": true
+        },
+        {
+          "name": "pool_token1",
+          "writable": true
+        },
+        {
+          "name": "fee_token0",
+          "writable": true
+        },
+        {
+          "name": "fee_token1",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_pool",
+      "discriminator": [
+        233,
+        146,
+        209,
+        142,
+        207,
+        104,
+        64,
+        188
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token0_mint"
+              },
+              {
+                "kind": "account",
+                "path": "token1_mint"
+              },
+              {
+                "kind": "arg",
+                "path": "config.fee"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token0_mint"
+        },
+        {
+          "name": "token1_mint"
+        },
+        {
+          "name": "coordinator"
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "config",
+          "type": {
+            "defined": {
+              "name": "PoolConfigParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_coordinator",
+      "discriminator": [
+        81,
+        123,
+        21,
+        43,
+        27,
+        11,
+        238,
+        2
+      ],
+      "accounts": [
+        {
+          "name": "coordinator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "initial_root_submitter",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "mint",
+      "discriminator": [
+        51,
+        57,
+        225,
+        47,
+        182,
+        146,
+        137,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user_token0",
+          "writable": true
+        },
+        {
+          "name": "user_token1",
+          "writable": true
+        },
+        {
+          "name": "pool_token0",
+          "writable": true
+        },
+        {
+          "name": "pool_token1",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "liquidity_delta",
+          "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "shielded_burn",
+      "discriminator": [
+        192,
+        98,
+        189,
+        150,
+        220,
+        99,
+        71,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "coordinator",
+          "writable": true
+        },
+        {
+          "name": "position_nullifier_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  117,
+                  108,
+                  108,
+                  105,
+                  102,
+                  105,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "inputs.position_nullifier_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "root_record",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "inputs.root"
+              }
+            ]
+          }
+        },
+        {
+          "name": "new_commitment0_acc",
+          "writable": true
+        },
+        {
+          "name": "new_commitment1_acc",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "inputs",
+          "type": {
+            "defined": {
+              "name": "BurnPublicInputs"
+            }
+          }
+        },
+        {
+          "name": "proof",
+          "type": "bytes"
+        },
+        {
+          "name": "liquidity_delta",
+          "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "shielded_deposit",
+      "discriminator": [
+        99,
+        105,
+        117,
+        65,
+        173,
+        130,
+        155,
+        11
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "coordinator",
+          "writable": true
+        },
+        {
+          "name": "commitment_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  109,
+                  109,
+                  105,
+                  116,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "coordinator"
+              },
+              {
+                "kind": "account",
+                "path": "coordinator.next_leaf_index",
+                "account": "CoordinatorState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user_token",
+          "writable": true
+        },
+        {
+          "name": "pool_token_custody",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "commitment",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "shielded_mint",
+      "discriminator": [
+        217,
+        82,
+        141,
+        46,
+        28,
+        110,
+        168,
+        246
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "coordinator",
+          "writable": true
+        },
+        {
+          "name": "nullifier_record0",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  117,
+                  108,
+                  108,
+                  105,
+                  102,
+                  105,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "inputs.nullifier_hash0"
+              }
+            ]
+          }
+        },
+        {
+          "name": "nullifier_record1",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  117,
+                  108,
+                  108,
+                  105,
+                  102,
+                  105,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "inputs.nullifier_hash1"
+              }
+            ]
+          }
+        },
+        {
+          "name": "root_record",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "inputs.root"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position_commitment_acc",
+          "writable": true
+        },
+        {
+          "name": "change_commitment0_acc",
+          "writable": true
+        },
+        {
+          "name": "change_commitment1_acc",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "inputs",
+          "type": {
+            "defined": {
+              "name": "MintPublicInputs"
+            }
+          }
+        },
+        {
+          "name": "proof",
+          "type": "bytes"
+        },
+        {
+          "name": "liquidity_delta",
+          "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "shielded_swap",
+      "discriminator": [
+        138,
+        192,
+        12,
+        120,
+        221,
+        91,
+        26,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "coordinator",
+          "writable": true
+        },
+        {
+          "name": "nullifier_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  117,
+                  108,
+                  108,
+                  105,
+                  102,
+                  105,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "inputs.nullifier_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "root_record",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "inputs.root"
+              }
+            ]
+          }
+        },
+        {
+          "name": "new_commitment_acc",
+          "writable": true
+        },
+        {
+          "name": "change_commitment_acc",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "inputs",
+          "type": {
+            "defined": {
+              "name": "SwapPublicInputs"
+            }
+          }
+        },
+        {
+          "name": "proof",
+          "type": "bytes"
+        },
+        {
+          "name": "_sqrt_price_limit_x96",
+          "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "shielded_withdraw",
+      "discriminator": [
+        212,
+        34,
+        45,
+        239,
+        90,
+        192,
+        208,
+        2
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "pool_pda",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool.token0",
+                "account": "PoolState"
+              },
+              {
+                "kind": "account",
+                "path": "pool.token1",
+                "account": "PoolState"
+              },
+              {
+                "kind": "account",
+                "path": "pool.fee",
+                "account": "PoolState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "coordinator",
+          "writable": true
+        },
+        {
+          "name": "nullifier_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  117,
+                  108,
+                  108,
+                  105,
+                  102,
+                  105,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "inputs.nullifier_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "root_record",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "inputs.root"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "pool_token_custody",
+          "writable": true
+        },
+        {
+          "name": "recipient_token",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "inputs",
+          "type": {
+            "defined": {
+              "name": "MembershipPublicInputs"
+            }
+          }
+        },
+        {
+          "name": "proof",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "submit_root",
+      "discriminator": [
+        15,
+        86,
+        198,
+        221,
+        22,
+        34,
+        184,
+        178
+      ],
+      "accounts": [
+        {
+          "name": "coordinator",
+          "writable": true
+        },
+        {
+          "name": "root_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  111,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "new_root"
+              }
+            ]
+          }
+        },
+        {
+          "name": "submitter",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "new_root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CommitmentRecord",
+      "discriminator": [
+        216,
+        195,
+        138,
+        99,
+        88,
+        191,
+        32,
+        246
+      ]
+    },
+    {
+      "name": "CoordinatorState",
+      "discriminator": [
+        46,
+        57,
+        27,
+        24,
+        141,
+        239,
+        105,
+        245
+      ]
+    },
+    {
+      "name": "MerkleRootRecord",
+      "discriminator": [
+        166,
+        229,
+        163,
+        192,
+        112,
+        233,
+        255,
+        57
+      ]
+    },
+    {
+      "name": "NullifierRecord",
+      "discriminator": [
+        56,
+        18,
+        57,
+        175,
+        69,
+        202,
+        189,
+        70
+      ]
+    },
+    {
+      "name": "PoolState",
+      "discriminator": [
+        247,
+        237,
+        227,
+        245,
+        215,
+        195,
+        222,
+        70
+      ]
+    },
+    {
+      "name": "PositionState",
+      "discriminator": [
+        154,
+        47,
+        151,
+        70,
+        8,
+        128,
+        206,
+        231
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidToken",
+      "msg": "Invalid token for this pool"
+    },
+    {
+      "code": 6001,
+      "name": "UnknownRoot",
+      "msg": "Unknown Merkle root"
+    },
+    {
+      "code": 6002,
+      "name": "InsufficientShieldedBalance",
+      "msg": "Insufficient shielded balance"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidTokenPair",
+      "msg": "Invalid token pair for swap"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidProof",
+      "msg": "Invalid ZK Proof"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidSubmitter",
+      "msg": "Invalid root submitter"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidRange",
+      "msg": "Invalid range provided"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidLiquidity",
+      "msg": "Liquidity cannot be zero"
+    },
+    {
+      "code": 6008,
+      "name": "SlippageExceeded",
+      "msg": "Swap output below slippage minimum"
+    },
+    {
+      "code": 6009,
+      "name": "TreeFull",
+      "msg": "Merkle tree is full"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidCommitmentPDA",
+      "msg": "Commitment account does not match expected PDA"
+    }
+  ],
+  "types": [
+    {
+      "name": "BurnPublicInputs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "new_commitment0",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "new_commitment1",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "position_nullifier_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "tick_lower",
+            "type": "u32"
+          },
+          {
+            "name": "tick_upper",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CommitmentRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "leaf_index",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CoordinatorState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "root_submitter",
+            "type": "pubkey"
+          },
+          {
+            "name": "current_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "next_leaf_index",
+            "type": "u32"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MembershipPublicInputs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nullifier_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "token",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MerkleRootRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintPublicInputs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nullifier_hash0",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nullifier_hash1",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "position_commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "tick_lower",
+            "type": "u32"
+          },
+          {
+            "name": "tick_upper",
+            "type": "u32"
+          },
+          {
+            "name": "change_commitment0",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "change_commitment1",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "NullifierRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nullifier_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "spent",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PoolConfigParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fee",
+            "type": "u32"
+          },
+          {
+            "name": "tick_spacing",
+            "type": "u32"
+          },
+          {
+            "name": "tick_lower",
+            "type": "i32"
+          },
+          {
+            "name": "tick_upper",
+            "type": "i32"
+          },
+          {
+            "name": "sqrt_price_lower_x96",
+            "type": "u128"
+          },
+          {
+            "name": "sqrt_price_upper_x96",
+            "type": "u128"
+          },
+          {
+            "name": "initial_sqrt_price_x96",
+            "type": "u128"
+          },
+          {
+            "name": "protocol_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "fee_recipient",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PoolState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token0",
+            "type": "pubkey"
+          },
+          {
+            "name": "token1",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee",
+            "type": "u32"
+          },
+          {
+            "name": "tick_spacing",
+            "type": "u32"
+          },
+          {
+            "name": "tick_lower",
+            "type": "i32"
+          },
+          {
+            "name": "tick_upper",
+            "type": "i32"
+          },
+          {
+            "name": "sqrt_price_lower_x96",
+            "type": "u128"
+          },
+          {
+            "name": "sqrt_price_upper_x96",
+            "type": "u128"
+          },
+          {
+            "name": "sqrt_price_x96",
+            "type": "u128"
+          },
+          {
+            "name": "total_liquidity",
+            "type": "u128"
+          },
+          {
+            "name": "reserve0",
+            "type": "u64"
+          },
+          {
+            "name": "reserve1",
+            "type": "u64"
+          },
+          {
+            "name": "shielded_balance0",
+            "type": "u64"
+          },
+          {
+            "name": "shielded_balance1",
+            "type": "u64"
+          },
+          {
+            "name": "protocol_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "fee_recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "coordinator",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PositionState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "liquidity",
+            "type": "u128"
+          },
+          {
+            "name": "fee_growth_0_last",
+            "type": "u128"
+          },
+          {
+            "name": "fee_growth_1_last",
+            "type": "u128"
+          },
+          {
+            "name": "tokens_owed_0",
+            "type": "u64"
+          },
+          {
+            "name": "tokens_owed_1",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SwapPublicInputs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nullifier_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "new_commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "change_commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "token_in",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_out",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "amount_out_min",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}

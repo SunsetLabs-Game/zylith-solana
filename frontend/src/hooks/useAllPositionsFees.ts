@@ -3,7 +3,7 @@ import { useSdkStore } from "@/stores/sdkStore";
 import { env } from "@/config/env";
 import { queryPresets } from "@/lib/queryOptions";
 import { useCanPoll } from "@/hooks/useCanPoll";
-import { FEE_TIERS, tokenToBigInt } from "@zylith/sdk";
+import { FEE_TIERS, tokenToBigInt2 } from "@zylith/sdk";
 import { TESTNET_TOKENS } from "@/config/tokens";
 import type { PoolKey } from "@zylith/sdk";
 
@@ -35,7 +35,7 @@ export function useAllPositionsFees() {
     if (!token0 || !token1) return null;
 
     const [t0, t1] =
-      tokenToBigInt(token0.address) < tokenToBigInt(token1.address)
+      tokenToBigInt2(token0.address) < tokenToBigInt2(token1.address)
         ? [token0.address, token1.address]
         : [token1.address, token0.address];
 

@@ -27,9 +27,8 @@ export const env = {
     coordinator: readEnv("VITE_COORDINATOR_PROGRAM_ID", "SunCoor111111111111111111111111111111111"),
   },
   contracts: {
-    // Legacy support for older code until refactored
-    pool: readEnv("VITE_POOL_PROGRAM_ID", "SunPooL111111111111111111111111111111111"),
-    coordinator: readEnv("VITE_COORDINATOR_PROGRAM_ID", "SunCoor111111111111111111111111111111111"),
+    pool: readEnv("VITE_POOL_ACCOUNT"),
+    coordinator: readEnv("VITE_COORDINATOR_ACCOUNT"),
   },
 } as const;
 

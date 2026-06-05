@@ -15,7 +15,7 @@ import { useToast } from "@/components/ui/Toast";
 import { TESTNET_TOKENS, getTokenSymbol } from "@/config/tokens";
 import { formatTokenAmount, transactionExplorerUrl } from "@/lib/format";
 import { getPositionStatusText, getPositionStatusVariant } from "@/lib/positionStatus";
-import { FEE_TIERS, getAmountsForBurn, tokenToBigInt } from "@zylith/sdk";
+import { FEE_TIERS, getAmountsForBurn, tokenToBigInt2 } from "@zylith/sdk";
 import type { PositionNote, PoolKey } from "@zylith/sdk";
 import { motion } from "motion/react";
 import { RefreshCcw, Shield, ExternalLink, Trash2, Layers, MapPin, Activity } from "lucide-react";
@@ -59,8 +59,8 @@ export function PositionsPage() {
   const token0 = TESTNET_TOKENS[0];
   const token1 = TESTNET_TOKENS[1];
   const poolKey: PoolKey | null = token0 && token1 ? {
-    token0: tokenToBigInt(token0.address) < tokenToBigInt(token1.address) ? token0.address : token1.address,
-    token1: tokenToBigInt(token0.address) < tokenToBigInt(token1.address) ? token1.address : token0.address,
+    token0: tokenToBigInt2(token0.address) < tokenToBigInt2(token1.address) ? token0.address : token1.address,
+    token1: tokenToBigInt2(token0.address) < tokenToBigInt2(token1.address) ? token1.address : token0.address,
     fee: FEE_TIERS.MEDIUM.fee,
     tickSpacing: FEE_TIERS.MEDIUM.tickSpacing,
   } : null;
@@ -107,7 +107,7 @@ export function PositionsPage() {
     if (!token0 || !token1) return;
 
     const [t0, t1] =
-      tokenToBigInt(token0.address) < tokenToBigInt(token1.address)
+      tokenToBigInt2(token0.address) < tokenToBigInt2(token1.address)
         ? [token0.address, token1.address]
         : [token1.address, token0.address];
 

@@ -1,7 +1,7 @@
 import { usePositionFees } from "@/hooks/usePositionFees";
 import { formatTokenAmount } from "@/lib/format";
 import { TOKEN_0, TOKEN_1 } from "@/config/tokens";
-import { tokenToBigInt } from "@zylith/sdk";
+import { tokenToBigInt2 } from "@zylith/sdk";
 import type { PositionNote } from "@zylith/sdk";
 import { Coins } from "lucide-react";
 
@@ -24,7 +24,7 @@ export function PositionFeesCard({ position }: PositionFeesCardProps) {
   }
 
   const [displayToken0, displayToken1] =
-    tokenToBigInt(token0.address) < tokenToBigInt(token1.address)
+    tokenToBigInt2(token0.address) < tokenToBigInt2(token1.address)
       ? [token0, token1]
       : [token1, token0];
 

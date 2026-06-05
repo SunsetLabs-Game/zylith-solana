@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Droplets, History, ExternalLink, Settings2 } from "lucide-react";
 import { transactionExplorerUrl } from "@/lib/solana";
 import { parseTokenAmount } from "@/lib/format";
-import { FEE_TIERS, tokenToBigInt } from "@zylith/sdk";
+import { FEE_TIERS, tokenToBigInt2 } from "@zylith/sdk";
 import type { PoolKey } from "@zylith/sdk";
 import { useMint } from "@/hooks/useMint";
 
@@ -66,10 +66,10 @@ export function AddLiquidityCard() {
   const handleAddLiquidity = () => {
     if (!canAddLiquidity || !note0 || !note1 || !token0 || !token1) return;
 
-    const [t0, t1] =
-      tokenToBigInt(token0.address) < tokenToBigInt(token1.address)
-        ? [token0.address, token1.address]
-        : [token1.address, token0.address];
+    const isZeroForOne = tokenToBigInt2(token0.address) < tokenToBigInt2(token1.address);
+    const [t0, t1] = isZeroForOne
+      ? [token0.address, token1.address]
+      : [token1.address, token0.address];
 
     const poolKey: PoolKey = {
       token0: t0,
@@ -82,13 +82,13 @@ export function AddLiquidityCard() {
 
     mint.mutate({
       poolKey,
-      inputNote0Commitment: note0.commitment,
-      inputNote1Commitment: note1.commitment,
+      inputNote0Commitment: isZeroForOne ? note0.commitment : note1.commitment,
+      inputNote1Commitment: isZeroForOne ? note1.commitment : note0.commitment,
       tickLower: parseInt(tickLower),
       tickUpper: parseInt(tickUpper),
       liquidity,
-      amount0: parsedAmount0,
-      amount1: parsedAmount1,
+      amount0: isZeroForOne ? parsedAmount0 : parsedAmount1,
+      amount1: isZeroForOne ? parsedAmount1 : parsedAmount0,
     });
   };
 
