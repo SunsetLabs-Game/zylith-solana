@@ -170,9 +170,14 @@ export class NoteManager {
 
   /** Get all unspent notes, optionally filtered by token */
   getUnspentNotes(token?: string): Note[] {
-    let notes = this.db.notes.filter((n) => !n.spent);
-    if (token) notes = notes.filter((n) => n.token === token);
-    return notes;
+    return this.db.notes.filter((n) => {
+      try {
+        BigInt(n.amount); // Try parsing to BigInt to detect corrupted notes
+      } catch {
+        return false;
+      }
+      return !n.spent && (!token || n.token === token);
+    });
   }
 
   /** Get all unspent position notes */

@@ -1,6 +1,6 @@
 /** Input generator for the swap circuit */
 import { computeCommitment } from "../../crypto/commitment.js";
-import { u256Split } from "../../utils/conversions.js";
+import { u256Split, tokenToBigInt2 } from "../../utils/conversions.js";
 import type { MerkleProof } from "../../crypto/merkle.js";
 
 export interface SwapCircuitInputs {
@@ -76,8 +76,8 @@ export function generateSwapInputs(params: {
     root: inputNote.merkleProof.root,
     nullifierHash,
     newCommitment,
-    tokenIn: params.tokenIn,
-    tokenOut: params.tokenOut,
+    tokenIn: tokenToBigInt2(params.tokenIn).toString(),
+    tokenOut: tokenToBigInt2(params.tokenOut).toString(),
     amountIn: params.amountIn,
     amountOutMin: params.amountOutMin,
     secret: inputNote.secret,

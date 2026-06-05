@@ -1,6 +1,6 @@
 /** Input generator for the burn circuit */
 import { computeCommitment, computePositionCommitment } from "../../crypto/commitment.js";
-import { u256Split } from "../../utils/conversions.js";
+import { u256Split, tokenToBigInt2 } from "../../utils/conversions.js";
 import { signedToOffsetTick } from "../../types/constants.js";
 import type { MerkleProof } from "../../crypto/merkle.js";
 
@@ -19,16 +19,16 @@ export interface BurnCircuitInputs {
   pathElements: string[];
   pathIndices: number[];
   // Private - output notes
-  outSecret0: string;
-  outNullifier0: string;
-  outAmount0_low: string;
-  outAmount0_high: string;
-  outToken0: string;
-  outSecret1: string;
-  outNullifier1: string;
-  outAmount1_low: string;
-  outAmount1_high: string;
-  outToken1: string;
+  newSecret0: string;
+  newNullifier0: string;
+  amount0_low: string;
+  amount0_high: string;
+  token0: string;
+  newSecret1: string;
+  newNullifier1: string;
+  amount1_low: string;
+  amount1_high: string;
+  token1: string;
 }
 
 /** Build circuit inputs for a burn proof */
@@ -98,15 +98,15 @@ export function generateBurnInputs(params: {
     liquidity: positionNote.liquidity.toString(),
     pathElements: positionNote.merkleProof.pathElements,
     pathIndices: positionNote.merkleProof.pathIndices,
-    outSecret0: outputNote0.secret,
-    outNullifier0: outputNote0.nullifier,
-    outAmount0_low: out0Low.toString(),
-    outAmount0_high: out0High.toString(),
-    outToken0: outputNote0.token,
-    outSecret1: outputNote1.secret,
-    outNullifier1: outputNote1.nullifier,
-    outAmount1_low: out1Low.toString(),
-    outAmount1_high: out1High.toString(),
-    outToken1: outputNote1.token,
+    newSecret0: outputNote0.secret,
+    newNullifier0: outputNote0.nullifier,
+    amount0_low: out0Low.toString(),
+    amount0_high: out0High.toString(),
+    token0: tokenToBigInt2(outputNote0.token).toString(),
+    newSecret1: outputNote1.secret,
+    newNullifier1: outputNote1.nullifier,
+    amount1_low: out1Low.toString(),
+    amount1_high: out1High.toString(),
+    token1: tokenToBigInt2(outputNote1.token).toString(),
   };
 }

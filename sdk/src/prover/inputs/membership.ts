@@ -1,6 +1,6 @@
 /** Input generator for the membership circuit */
 import { computeCommitment } from "../../crypto/commitment.js";
-import { u256Split } from "../../utils/conversions.js";
+import { u256Split, tokenToBigInt2 } from "../../utils/conversions.js";
 import type { MerkleProof } from "../../crypto/merkle.js";
 
 export interface MembershipCircuitInputs {
@@ -42,7 +42,7 @@ export function generateMembershipInputs(
     nullifier,
     amount_low: low.toString(),
     amount_high: high.toString(),
-    token,
+    token: tokenToBigInt2(token).toString(),
     pathElements: merkleProof.pathElements,
     pathIndices: merkleProof.pathIndices,
   };

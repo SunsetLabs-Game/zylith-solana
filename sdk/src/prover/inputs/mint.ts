@@ -1,6 +1,6 @@
 /** Input generator for the mint circuit */
 import { computeCommitment, computePositionCommitment } from "../../crypto/commitment.js";
-import { u256Split } from "../../utils/conversions.js";
+import { u256Split, tokenToBigInt2 } from "../../utils/conversions.js";
 import { signedToOffsetTick } from "../../types/constants.js";
 import type { MerkleProof } from "../../crypto/merkle.js";
 
@@ -32,6 +32,10 @@ export interface MintCircuitInputs {
   positionSecret: string;
   positionNullifier: string;
   liquidity: string;
+  amount0_low: string;
+  amount0_high: string;
+  amount1_low: string;
+  amount1_high: string;
   // Private - change notes
   changeSecret0: string;
   changeNullifier0: string;
@@ -64,6 +68,8 @@ export function generateMintInputs(params: {
   };
   changeNote0: { secret: string; nullifier: string };
   changeNote1: { secret: string; nullifier: string };
+  amount0: bigint;
+  amount1: bigint;
 }): MintCircuitInputs {
   const { inputNote0, inputNote1, position, changeNote0, changeNote1 } =
     params;
@@ -97,6 +103,9 @@ export function generateMintInputs(params: {
     position.liquidity.toString(),
   );
 
+  const { low: amount0Low, high: amount0High } = u256Split(params.amount0);
+  const { low: amount1Low, high: amount1High } = u256Split(params.amount1);
+
   return {
     root: inputNote0.merkleProof.root,
     nullifierHash0,
@@ -108,19 +117,23 @@ export function generateMintInputs(params: {
     nullifier0: inputNote0.nullifier,
     balance0_low: bal0Low.toString(),
     balance0_high: bal0High.toString(),
-    token0: inputNote0.token,
+    token0: tokenToBigInt2(inputNote0.token).toString(),
     pathElements0: inputNote0.merkleProof.pathElements,
     pathIndices0: inputNote0.merkleProof.pathIndices,
     secret1: inputNote1.secret,
     nullifier1: inputNote1.nullifier,
     balance1_low: bal1Low.toString(),
     balance1_high: bal1High.toString(),
-    token1: inputNote1.token,
+    token1: tokenToBigInt2(inputNote1.token).toString(),
     pathElements1: inputNote1.merkleProof.pathElements,
     pathIndices1: inputNote1.merkleProof.pathIndices,
     positionSecret: position.secret,
     positionNullifier: position.nullifier,
     liquidity: position.liquidity.toString(),
+    amount0_low: amount0Low.toString(),
+    amount0_high: amount0High.toString(),
+    amount1_low: amount1Low.toString(),
+    amount1_high: amount1High.toString(),
     changeSecret0: changeNote0.secret,
     changeNullifier0: changeNote0.nullifier,
     changeSecret1: changeNote1.secret,

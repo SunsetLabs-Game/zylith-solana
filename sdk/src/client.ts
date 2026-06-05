@@ -118,18 +118,17 @@ export class ZylithClient {
 
   async swap(params: SwapParams): Promise<SwapResult> {
     this.assertInit();
-    const asp = this.assertAsp();
-    return swap({ ...params, useAspProver: true }, asp, this.noteManager);
+    return swap({ ...params, useAspProver: true }, this.assertAsp(), this.noteManager);
   }
 
   async mint(params: MintParams): Promise<MintResult> {
     this.assertInit();
-    return mint(params, this.assertAsp(), this.noteManager);
+    return mint({ ...params, useAspProver: true }, this.assertAsp(), this.noteManager);
   }
 
   async burn(params: BurnParams): Promise<BurnResult> {
     this.assertInit();
-    return burn(params, this.assertAsp(), this.noteManager);
+    return burn({ ...params, useAspProver: true }, this.assertAsp(), this.noteManager);
   }
 
   // ========================================================================

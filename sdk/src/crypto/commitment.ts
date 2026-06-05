@@ -11,7 +11,10 @@
  *   commitment = Poseidon(secret, nullifier, tickLower, tickUpper, liquidity)
  */
 import { hash } from "./poseidon.js";
-import { tokenToBigInt } from "../utils/conversions.js";
+import {
+  u256Combine,
+  tokenToBigInt2,
+} from "../utils/conversions.js";
 
 export interface NoteCommitmentResult {
   commitment: string;
@@ -38,7 +41,7 @@ export function computeCommitment(
 ): NoteCommitmentResult {
   const innerHash = hash([secret, nullifier]);
   const nullifierHash = hash([nullifier]);
-  const tokenVal = tokenToBigInt(token);
+  const tokenVal = tokenToBigInt2(token);
   const commitment = hash([innerHash, amountLow, amountHigh, tokenVal]);
 
   return { commitment, nullifierHash, innerHash };

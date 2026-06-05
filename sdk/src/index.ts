@@ -37,7 +37,7 @@ export {
   u256Split,
   u256Combine,
   generateRandomSecret,
-  tokenToBigInt,
+  tokenToBigInt2,
 } from "./utils/conversions.js";
 
 export { getAmountsForBurn, estimateSwapOutput, estimateSwapOutputSafe } from "./utils/clmm.js";

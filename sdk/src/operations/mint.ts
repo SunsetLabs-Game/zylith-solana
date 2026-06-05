@@ -138,6 +138,8 @@ export async function mint(
         tickUpper: params.tickUpper,
         liquidity: params.liquidity,
       },
+      amount0: params.amount0,
+      amount1: params.amount1,
       changeNote0: { secret: change0Secret, nullifier: change0Nullifier },
       changeNote1: { secret: change1Secret, nullifier: change1Nullifier },
     });
