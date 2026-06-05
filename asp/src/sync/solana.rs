@@ -68,13 +68,18 @@ async fn sync_once(state: &Arc<AppState>, rpc_client: &RpcClient) -> Result<(), 
         let sig = solana_sdk::signature::Signature::from_str(&sig_info.signature).unwrap();
         
         // 2. Get transaction details
-        let tx = rpc_client.get_transaction(&sig, solana_transaction_status::UiTransactionEncoding::Json)
+        let config = solana_client::rpc_config::RpcTransactionConfig {
+            encoding: Some(solana_transaction_status::UiTransactionEncoding::Json),
+            commitment: Some(CommitmentConfig::confirmed()),
+            max_supported_transaction_version: Some(0),
+        };
+        let tx = rpc_client.get_transaction_with_config(&sig, config)
             .map_err(|e| AspError::RpcError(format!("Failed to get transaction {sig}: {e}")))?;
 
         if let Some(meta) = tx.transaction.meta {
             if meta.err.is_none() {
                 // 3. Look for ShieldedDeposit instructions
-                process_transaction(state, &sig_info.signature, tx.transaction.transaction)?;
+                process_transaction(state, &sig_info.signature, tx.transaction.transaction).await?;
             }
         }
 
@@ -85,40 +90,72 @@ async fn sync_once(state: &Arc<AppState>, rpc_client: &RpcClient) -> Result<(), 
     Ok(())
 }
 
-fn process_transaction(state: &Arc<AppState>, tx_hash: &str, tx_data: solana_transaction_status::EncodedTransaction) -> Result<(), AspError> {
+async fn process_transaction(state: &Arc<AppState>, tx_hash: &str, tx_data: solana_transaction_status::EncodedTransaction) -> Result<(), AspError> {
     use solana_sdk::hash::hashv;
 
-    // Anchor discriminator for shielded_deposit
-    let preimage = b"global:shielded_deposit";
-    let disc = hashv(&[preimage]).to_bytes()[..8].to_vec();
+    let disc_deposit = hashv(&[b"global:shielded_deposit"]).to_bytes()[..8].to_vec();
+    let disc_swap = hashv(&[b"global:shielded_swap"]).to_bytes()[..8].to_vec();
+    let disc_mint = hashv(&[b"global:shielded_mint"]).to_bytes()[..8].to_vec();
+    let disc_burn = hashv(&[b"global:shielded_burn"]).to_bytes()[..8].to_vec();
 
-    // In a real implementation, we would decode the Base64 transaction and look for the instruction.
-    // For this demonstration, we'll parse the message if available.
     if let solana_transaction_status::EncodedTransaction::Json(ui_tx) = tx_data {
         if let UiMessage::Raw(raw) = ui_tx.message {
             for ix in raw.instructions {
                 let data = bs58::decode(&ix.data).into_vec().unwrap_or_default();
 
-                if data.len() >= 48 && data[0..8] == disc {
-                        // Extract commitment (offset 16: 8 discriminator + 8 amount)
-                        let commitment_bytes = &data[16..48];
+                if data.len() >= 8 {
+                    let disc = &data[0..8];
+                    let mut commitments_to_insert = Vec::new();
+
+                    if disc == disc_deposit.as_slice() && data.len() >= 48 {
+                        commitments_to_insert.push(&data[16..48]);
+                    } else if disc == disc_swap.as_slice() && data.len() >= 136 {
+                        commitments_to_insert.push(&data[72..104]);
+                        commitments_to_insert.push(&data[104..136]);
+                    } else if disc == disc_mint.as_slice() && data.len() >= 208 {
+                        commitments_to_insert.push(&data[104..136]);
+                        commitments_to_insert.push(&data[144..176]);
+                        commitments_to_insert.push(&data[176..208]);
+                    } else if disc == disc_burn.as_slice() && data.len() >= 72 {
+                        commitments_to_insert.push(&data[8..40]);
+                        commitments_to_insert.push(&data[40..72]);
+                    }
+
+                    for commitment_bytes in commitments_to_insert {
                         let commitment_hex = format!("0x{}", hex::encode(commitment_bytes));
-                        
-                        // Convert to decimal for the ASP internal storage
                         let commitment_dec = crate::api::handlers::deposit::hex_to_decimal(&commitment_hex)?;
 
-                        // Infer leaf index from DB count (assuming sequential sync)
                         let leaf_index = state.db.get_leaf_count()?;
                         
                         tracing::info!(
                             leaf_index = leaf_index,
                             commitment = %commitment_hex,
-                            "Found shielded_deposit event in transaction"
+                            "Found shielded event in transaction"
                         );
 
                         state.db.insert_commitment(leaf_index, &commitment_dec, Some(tx_hash))?;
+                        
+                        // Update the worker's in-memory tree!
+                        let mut worker = state.worker.lock().await;
+                        match worker.insert_leaf(&commitment_dec).await {
+                            Ok(new_root) => {
+                                let new_root_hex = crate::api::handlers::deposit::decimal_to_hex(&new_root);
+                                drop(worker); // drop lock before await
+                                
+                                // Now submit it on-chain!
+                                if let Some(relayer_mutex) = &state.relayer {
+                                    let relayer = relayer_mutex.lock().await;
+                                    match relayer.submit_merkle_root(&new_root_hex).await {
+                                        Ok(sig) => tracing::info!("Merkle root {} submitted on chain: {}", new_root_hex, sig),
+                                        Err(e) => tracing::error!("Failed to submit Merkle root on chain: {}", e),
+                                    }
+                                }
+                            }
+                            Err(e) => tracing::error!("Failed to update worker Merkle tree: {}", e),
+                        }
                     }
                 }
+            }
         }
     }
 

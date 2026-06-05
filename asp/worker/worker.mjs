@@ -12,6 +12,7 @@ import { MerkleTree } from "../../circuits/scripts/lib/merkle.mjs";
 import {
   computeCommitment,
   computePositionCommitment,
+  tokenToBigInt,
 } from "../../circuits/scripts/lib/commitment.mjs";
 import {
   generateProof,
@@ -101,6 +102,13 @@ async function handleCommand(msg) {
       }
 
       case "compute_position_commitment": {
+        console.error("[WORKER] Computing position commitment with:");
+        console.error("secret:", params.secret);
+        console.error("nullifier:", params.nullifier);
+        console.error("tickLower:", params.tickLower, typeof params.tickLower);
+        console.error("tickUpper:", params.tickUpper, typeof params.tickUpper);
+        console.error("liquidity:", params.liquidity, typeof params.liquidity);
+        
         const result = computePositionCommitment(
           params.secret,
           params.nullifier,
@@ -108,6 +116,9 @@ async function handleCommand(msg) {
           params.tickUpper,
           params.liquidity,
         );
+        
+        console.error("[WORKER] Resulting commitment:", result.commitment);
+        
         respond({
           id,
           ok: true,
@@ -122,10 +133,32 @@ async function handleCommand(msg) {
       case "generate_proof": {
         const { circuit, inputs } = params;
 
+        // Pre-process inputs: convert any base58 token fields to BigInt strings
+        // so snarkjs/F.e() can parse them (it only accepts numeric strings or BigInts)
+        const TOKEN_FIELDS = ["token0", "token1", "tokenIn", "tokenOut", "token"];
+        const processedInputs = { ...inputs };
+        for (const field of TOKEN_FIELDS) {
+          if (processedInputs[field] && typeof processedInputs[field] === "string" 
+              && !/^\d+$/.test(processedInputs[field]) 
+              && !processedInputs[field].startsWith("0x")) {
+            processedInputs[field] = tokenToBigInt(processedInputs[field]).toString();
+          }
+        }
+        
+        if (circuit === "mint") {
+          console.error("[WORKER] Generating mint proof with inputs:");
+          console.error("positionSecret:", processedInputs.positionSecret);
+          console.error("positionNullifier:", processedInputs.positionNullifier);
+          console.error("tickLower:", processedInputs.tickLower);
+          console.error("tickUpper:", processedInputs.tickUpper);
+          console.error("liquidity:", processedInputs.liquidity);
+          console.error("positionCommitment:", processedInputs.positionCommitment);
+        }
+
         // 1. Generate Groth16 proof via snarkjs
         const { proof, publicSignals, verified } = await generateProof(
           circuit,
-          inputs,
+          processedInputs,
         );
 
         if (!verified) {

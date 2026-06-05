@@ -49,27 +49,21 @@ pub fn validate_decimal(value: &str, field_name: &str) -> Result<(), AspError> {
     Ok(())
 }
 
-/// Validate an EVM address (0x-prefixed, 20 bytes).
+/// Validate a Solana address (Base58, 32 bytes).
 pub fn validate_address(value: &str, field_name: &str) -> Result<(), AspError> {
     if value.is_empty() {
         return Err(AspError::InvalidInput(format!("{field_name} is required")));
     }
 
-    let stripped = value
-        .strip_prefix("0x")
-        .or_else(|| value.strip_prefix("0X"))
-        .ok_or_else(|| {
-            AspError::InvalidInput(format!("{field_name} must be hex-prefixed (0x...)"))
-        })?;
+    let decoded = bs58::decode(value).into_vec().map_err(|_| {
+        AspError::InvalidInput(format!("{field_name} must be a valid base58 string"))
+    })?;
 
-    if stripped.len() != 40 {
+    if decoded.len() != 32 {
         return Err(AspError::InvalidInput(format!(
-            "{field_name} must be a 20-byte EVM address"
+            "{field_name} must be a 32-byte Solana pubkey"
         )));
     }
-
-    BigUint::from_str_radix(stripped, 16)
-        .map_err(|_| AspError::InvalidInput(format!("{field_name} is not valid hex")))?;
 
     Ok(())
 }
@@ -145,13 +139,13 @@ mod tests {
 
     #[test]
     fn validate_address_valid() {
-        assert!(validate_address("0x1111111111111111111111111111111111111111", "test").is_ok());
+        assert!(validate_address("4AZXbzLhUUfQ8PCAdSTcPHuh86KJdBB5Z2YeGvZswhbz", "test").is_ok());
     }
 
     #[test]
     fn validate_address_invalid_length() {
-        let too_large = format!("0x{}", "f".repeat(64));
-        assert!(validate_address(&too_large, "test").is_err());
+        // "1111" is valid base58 but not 32 bytes
+        assert!(validate_address("1111", "test").is_err());
     }
 
     #[test]
