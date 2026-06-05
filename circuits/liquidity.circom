@@ -199,6 +199,7 @@ template PrivateMint(levels) {
     // =================================
 
     // Token0 must be < Token1 (standard Uniswap v3 convention)
+    // Use 254 bits: Solana addresses are 256 bits but always < BN254 field prime
     component tokenOrder = LessThan(252);
     tokenOrder.in[0] <== token0;
     tokenOrder.in[1] <== token1;

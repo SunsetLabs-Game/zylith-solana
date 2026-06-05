@@ -5,7 +5,7 @@ pub mod math;
 pub mod vk;
 use crate::math::*;
 
-declare_id!("AifYaPemPJgQVhqxQs583YELWmbyVQwL9vF4cAjsyvnH");
+declare_id!("4CNqqTnGEMYqWkE4VCS7cRy3tAJcrPGGMvM9dyFmJwp9");
 
 /// Circom circuits use a 20-level tree → max 2^20 leaves.
 const MAX_TREE_LEAVES: u32 = 1 << 20;
@@ -393,18 +393,55 @@ pub mod zylith {
         pool.total_liquidity += liquidity_delta;
 
         let coordinator = &mut ctx.accounts.coordinator;
-        require!(coordinator.next_leaf_index < MAX_TREE_LEAVES, ErrorCode::TreeFull);
+        require!(
+            coordinator.next_leaf_index.saturating_add(2) < MAX_TREE_LEAVES,
+            ErrorCode::TreeFull
+        );
         validate_commitment_pda(
             ctx.accounts.position_commitment_acc.key(),
             coordinator.key(),
             coordinator.next_leaf_index,
+        )?;
+        validate_commitment_pda(
+            ctx.accounts.change_commitment0_acc.key(),
+            coordinator.key(),
+            coordinator.next_leaf_index + 1,
+        )?;
+        validate_commitment_pda(
+            ctx.accounts.change_commitment1_acc.key(),
+            coordinator.key(),
+            coordinator.next_leaf_index + 2,
         )?;
 
         // Write position_commitment_acc data manually (UncheckedAccount)
         {
             let mut data = ctx.accounts.position_commitment_acc.try_borrow_mut_data()?;
             let record = CommitmentRecord {
-                commitment: inputs.position_commitment,
+                commitment: inputs_box.position_commitment,
+                leaf_index: coordinator.next_leaf_index,
+            };
+            let mut cursor = std::io::Cursor::new(&mut data[8..]);
+            AnchorSerialize::serialize(&record, &mut cursor).map_err(|_| error!(ErrorCode::InvalidToken))?;
+        }
+        coordinator.next_leaf_index += 1;
+
+        // Write change_commitment0_acc data manually (UncheckedAccount)
+        {
+            let mut data = ctx.accounts.change_commitment0_acc.try_borrow_mut_data()?;
+            let record = CommitmentRecord {
+                commitment: inputs_box.change_commitment0,
+                leaf_index: coordinator.next_leaf_index,
+            };
+            let mut cursor = std::io::Cursor::new(&mut data[8..]);
+            AnchorSerialize::serialize(&record, &mut cursor).map_err(|_| error!(ErrorCode::InvalidToken))?;
+        }
+        coordinator.next_leaf_index += 1;
+
+        // Write change_commitment1_acc data manually (UncheckedAccount)
+        {
+            let mut data = ctx.accounts.change_commitment1_acc.try_borrow_mut_data()?;
+            let record = CommitmentRecord {
+                commitment: inputs_box.change_commitment1,
                 leaf_index: coordinator.next_leaf_index,
             };
             let mut cursor = std::io::Cursor::new(&mut data[8..]);
@@ -816,6 +853,12 @@ pub struct ShieldedMint<'info> {
     /// CHECK: commitment PDA validated by seeds in handler
     #[account(mut)]
     pub position_commitment_acc: UncheckedAccount<'info>,
+    /// CHECK: commitment PDA validated by seeds in handler
+    #[account(mut)]
+    pub change_commitment0_acc: UncheckedAccount<'info>,
+    /// CHECK: commitment PDA validated by seeds in handler
+    #[account(mut)]
+    pub change_commitment1_acc: UncheckedAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>,

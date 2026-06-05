@@ -4,10 +4,10 @@
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-zylith = "AifYaPemPJgQVhqxQs583YELWmbyVQwL9vF4cAjsyvnH"
-
 [programs.devnet]
+zylith = "4CNqqTnGEMYqWkE4VCS7cRy3tAJcrPGGMvM9dyFmJwp9"
+
+[programs.localnet]
 zylith = "AifYaPemPJgQVhqxQs583YELWmbyVQwL9vF4cAjsyvnH"
 
 [programs.testnet]
