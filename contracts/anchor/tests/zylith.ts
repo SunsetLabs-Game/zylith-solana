@@ -229,6 +229,8 @@ describe("zylith", () => {
           nullifierRecord1: nullifierRecord1Pda,
           rootRecord: rootRecordPda,
           positionCommitmentAcc: positionCommitmentPda,
+          changeCommitment0Acc: Keypair.generate().publicKey,
+          changeCommitment1Acc: Keypair.generate().publicKey,
           payer: owner.publicKey,
           systemProgram: SystemProgram.programId,
         })
