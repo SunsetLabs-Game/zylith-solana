@@ -59,11 +59,9 @@ export async function buildShieldedDepositTx(params: {
 
   const coordinatorPubkey = new PublicKey(params.coordinatorAddress);
   
-  let leafIndex = params.leafIndex;
-  if (leafIndex === undefined) {
-    const coordinatorState = await (program.account as any).coordinatorState.fetch(coordinatorPubkey);
-    leafIndex = coordinatorState.nextLeafIndex;
-  }
+  const leafIndex = params.leafIndex !== undefined
+    ? params.leafIndex
+    : (await (program.account as any).coordinatorState.fetch(coordinatorPubkey)).nextLeafIndex as number;
 
   const commitmentAccount = getCommitmentPda(
     coordinatorPubkey, 
