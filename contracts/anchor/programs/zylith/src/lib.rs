@@ -26,6 +26,49 @@ fn validate_commitment_pda(
     Ok(())
 }
 
+fn create_commitment_account<'info>(
+    payer: &Signer<'info>,
+    account_to_create: &AccountInfo<'info>,
+    system_program: &Program<'info, System>,
+    coordinator_key: Pubkey,
+    leaf_index: u32,
+) -> Result<()> {
+    let (expected_pubkey, bump) = Pubkey::find_program_address(
+        &[b"commitment", coordinator_key.as_ref(), &leaf_index.to_le_bytes()],
+        &crate::ID,
+    );
+    require!(account_to_create.key() == expected_pubkey, ErrorCode::InvalidCommitmentPDA);
+
+    if account_to_create.data_is_empty() {
+        let rent = Rent::get()?;
+        let lamports = rent.minimum_balance(44);
+
+        let signer_seeds: &[&[u8]] = &[
+            b"commitment",
+            coordinator_key.as_ref(),
+            &leaf_index.to_le_bytes(),
+            &[bump],
+        ];
+
+        anchor_lang::solana_program::program::invoke_signed(
+            &anchor_lang::solana_program::system_instruction::create_account(
+                payer.key,
+                account_to_create.key,
+                lamports,
+                44,
+                &crate::ID,
+            ),
+            &[
+                payer.to_account_info(),
+                account_to_create.to_account_info(),
+                system_program.to_account_info(),
+            ],
+            &[signer_seeds],
+        )?;
+    }
+    Ok(())
+}
+
 #[program]
 pub mod zylith {
     use super::*;
@@ -209,9 +252,9 @@ pub mod zylith {
         require!(ctx.accounts.root_record.root == inputs.root, ErrorCode::UnknownRoot);
 
         let mut amount_in_bytes = [0u8; 32];
-        amount_in_bytes[0..8].copy_from_slice(&inputs.amount_in.to_le_bytes());
+        amount_in_bytes[24..32].copy_from_slice(&inputs.amount_in.to_be_bytes());
         let mut amount_out_min_bytes = [0u8; 32];
-        amount_out_min_bytes[0..8].copy_from_slice(&inputs.amount_out_min.to_le_bytes());
+        amount_out_min_bytes[24..32].copy_from_slice(&inputs.amount_out_min.to_be_bytes());
 
         let public_inputs: [[u8; 32]; 8] = [
             inputs.root,
@@ -281,13 +324,17 @@ pub mod zylith {
             coordinator.next_leaf_index.saturating_add(1) < MAX_TREE_LEAVES,
             ErrorCode::TreeFull
         );
-        validate_commitment_pda(
-            ctx.accounts.new_commitment_acc.key(),
+        create_commitment_account(
+            &ctx.accounts.payer,
+            &ctx.accounts.new_commitment_acc,
+            &ctx.accounts.system_program,
             coordinator.key(),
             coordinator.next_leaf_index,
         )?;
-        validate_commitment_pda(
-            ctx.accounts.change_commitment_acc.key(),
+        create_commitment_account(
+            &ctx.accounts.payer,
+            &ctx.accounts.change_commitment_acc,
+            &ctx.accounts.system_program,
             coordinator.key(),
             coordinator.next_leaf_index + 1,
         )?;
@@ -324,9 +371,9 @@ pub mod zylith {
         require!(ctx.accounts.root_record.root == inputs_box.root, ErrorCode::UnknownRoot);
 
         let mut tick_lower_bytes = [0u8; 32];
-        tick_lower_bytes[0..4].copy_from_slice(&inputs_box.tick_lower.to_le_bytes());
+        tick_lower_bytes[28..32].copy_from_slice(&inputs_box.tick_lower.to_be_bytes());
         let mut tick_upper_bytes = [0u8; 32];
-        tick_upper_bytes[0..4].copy_from_slice(&inputs_box.tick_upper.to_le_bytes());
+        tick_upper_bytes[28..32].copy_from_slice(&inputs_box.tick_upper.to_be_bytes());
 
         // Note: snarkjs outputs are placed before public inputs
         let public_inputs: [[u8; 32]; 8] = [
@@ -397,18 +444,24 @@ pub mod zylith {
             coordinator.next_leaf_index.saturating_add(2) < MAX_TREE_LEAVES,
             ErrorCode::TreeFull
         );
-        validate_commitment_pda(
-            ctx.accounts.position_commitment_acc.key(),
+        create_commitment_account(
+            &ctx.accounts.payer,
+            &ctx.accounts.position_commitment_acc,
+            &ctx.accounts.system_program,
             coordinator.key(),
             coordinator.next_leaf_index,
         )?;
-        validate_commitment_pda(
-            ctx.accounts.change_commitment0_acc.key(),
+        create_commitment_account(
+            &ctx.accounts.payer,
+            &ctx.accounts.change_commitment0_acc,
+            &ctx.accounts.system_program,
             coordinator.key(),
             coordinator.next_leaf_index + 1,
         )?;
-        validate_commitment_pda(
-            ctx.accounts.change_commitment1_acc.key(),
+        create_commitment_account(
+            &ctx.accounts.payer,
+            &ctx.accounts.change_commitment1_acc,
+            &ctx.accounts.system_program,
             coordinator.key(),
             coordinator.next_leaf_index + 2,
         )?;
@@ -516,9 +569,9 @@ pub mod zylith {
         require!(ctx.accounts.root_record.root == inputs_box.root, ErrorCode::UnknownRoot);
 
         let mut tick_lower_bytes = [0u8; 32];
-        tick_lower_bytes[0..4].copy_from_slice(&inputs_box.tick_lower.to_le_bytes());
+        tick_lower_bytes[28..32].copy_from_slice(&inputs_box.tick_lower.to_be_bytes());
         let mut tick_upper_bytes = [0u8; 32];
-        tick_upper_bytes[0..4].copy_from_slice(&inputs_box.tick_upper.to_le_bytes());
+        tick_upper_bytes[28..32].copy_from_slice(&inputs_box.tick_upper.to_be_bytes());
 
         // Note: snarkjs outputs are placed before public inputs
         let public_inputs: [[u8; 32]; 6] = [
@@ -581,13 +634,17 @@ pub mod zylith {
             coordinator.next_leaf_index.saturating_add(1) < MAX_TREE_LEAVES,
             ErrorCode::TreeFull
         );
-        validate_commitment_pda(
-            ctx.accounts.new_commitment0_acc.key(),
+        create_commitment_account(
+            &ctx.accounts.payer,
+            &ctx.accounts.new_commitment0_acc,
+            &ctx.accounts.system_program,
             coordinator.key(),
             coordinator.next_leaf_index,
         )?;
-        validate_commitment_pda(
-            ctx.accounts.new_commitment1_acc.key(),
+        create_commitment_account(
+            &ctx.accounts.payer,
+            &ctx.accounts.new_commitment1_acc,
+            &ctx.accounts.system_program,
             coordinator.key(),
             coordinator.next_leaf_index + 1,
         )?;
