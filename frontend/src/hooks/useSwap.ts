@@ -24,7 +24,7 @@ interface SwapInput {
 export function useSwap() {
   const client = useSdkStore((s) => s.client);
   const refreshBalances = useSdkStore((s) => s.refreshBalances);
-  const { execute } = useWalletSession();
+  const { execute, address } = useWalletSession();
   const { toast } = useToast();
 
   return useMutation({
@@ -32,6 +32,7 @@ export function useSwap() {
       if (!client) throw new Error("SDK not initialized");
       if (!env.contracts.pool) throw new Error("Pool address is not configured");
       if (!env.contracts.coordinator) throw new Error("Coordinator address is not configured");
+      if (!address) throw new Error("Wallet not connected");
 
       const noteManager = client.getNoteManager();
       const snapshot = noteManager.snapshot();
@@ -39,10 +40,12 @@ export function useSwap() {
       try {
         const result = await client.swap(input);
         const txHash = await execute([
-          buildShieldedSwapTx({
+          await buildShieldedSwapTx({
             poolAddress: env.contracts.pool,
             proofData: result.calldata.join(","),
             sqrtPriceLimitX96: input.sqrtPriceLimit.toString(),
+            ownerAddress: address,
+            coordinatorAddress: env.contracts.coordinator,
           }),
         ]);
         await client.saveNotes();

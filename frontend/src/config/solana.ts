@@ -106,16 +106,70 @@ export function buildShieldedWithdrawTx(_params: {
   });
 }
 
-export function buildShieldedSwapTx(_params: {
+export async function buildShieldedSwapTx(params: {
   poolAddress: string;
   proofData: string;
   sqrtPriceLimitX96: string;
-}): TransactionInstruction {
-  return new TransactionInstruction({
-    programId: new PublicKey("Memo1UuS27vSdwMbsBv7mNoSqbiyfR3S66GE5Xq6E29"),
-    keys: [],
-    data: Buffer.from("Sunset Shield Swap", "utf-8"),
-  });
+  ownerAddress: string;
+  coordinatorAddress: string;
+}): Promise<TransactionInstruction> {
+  const calldata = params.proofData.split(",");
+
+  const inputs = {
+    changeCommitment: Array.from(Buffer.from(calldata[8].replace("0x", "").padStart(64, "0"), "hex")),
+    root: Array.from(Buffer.from(calldata[9].replace("0x", "").padStart(64, "0"), "hex")),
+    nullifierHash: Array.from(Buffer.from(calldata[10].replace("0x", "").padStart(64, "0"), "hex")),
+    newCommitment: Array.from(Buffer.from(calldata[11].replace("0x", "").padStart(64, "0"), "hex")),
+    tokenIn: new PublicKey(Buffer.from(calldata[12].replace("0x", ""), "hex")),
+    tokenOut: new PublicKey(Buffer.from(calldata[13].replace("0x", ""), "hex")),
+    amountIn: new BN(BigInt(calldata[14]).toString()),
+    amountOutMin: new BN(BigInt(calldata[15]).toString()),
+  };
+
+  const P = 21888242871839275222246405745257275088696311157297823662689037894645226208583n;
+  const aX = BigInt(calldata[0]);
+  const aY = BigInt(calldata[1]);
+  const aYNeg = P - (aY % P);
+
+  const proofBufs = [
+    aX, aYNeg, // pi_a (negated)
+    BigInt(calldata[2]), BigInt(calldata[3]), // pi_b[0]
+    BigInt(calldata[4]), BigInt(calldata[5]), // pi_b[1]
+    BigInt(calldata[6]), BigInt(calldata[7])  // pi_c
+  ].map(n => Buffer.from(n.toString(16).padStart(64, "0"), "hex"));
+
+  const proof = Buffer.concat(proofBufs);
+
+  // Derive PDAs
+  const nullifierRecord = PublicKey.findProgramAddressSync(
+    [Buffer.from("nullifier"), Buffer.from(inputs.nullifierHash)],
+    program.programId
+  )[0];
+
+  const rootRecord = PublicKey.findProgramAddressSync(
+    [Buffer.from("root"), Buffer.from(inputs.root)],
+    program.programId
+  )[0];
+
+  const coordinatorPubkey = new PublicKey(params.coordinatorAddress);
+  const coordinatorState = await (program.account as any).coordinatorState.fetch(coordinatorPubkey);
+  const nextLeafIndex = coordinatorState.nextLeafIndex;
+
+  const newCommitmentAcc = getCommitmentPda(coordinatorPubkey, nextLeafIndex);
+  const changeCommitmentAcc = getCommitmentPda(coordinatorPubkey, nextLeafIndex + 1);
+
+  return await program.methods.shieldedSwap(inputs, proof, new BN(params.sqrtPriceLimitX96))
+    .accounts({
+      pool: new PublicKey(params.poolAddress),
+      coordinator: coordinatorPubkey,
+      nullifierRecord,
+      rootRecord,
+      newCommitmentAcc,
+      changeCommitmentAcc,
+      payer: new PublicKey(params.ownerAddress),
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
 }
 
 export async function buildShieldedMintTx(params: {
