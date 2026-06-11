@@ -57,6 +57,7 @@ export function useDeposit() {
           commitment: commitmentHex,
           ownerAddress: address,
           coordinatorAddress: env.contracts.coordinator,
+          leafIndex: prepared.leafIndex,
         });
         
         const txHash = await execute([txInstruction]);

@@ -37,6 +37,7 @@ export async function buildShieldedDepositTx(params: {
   commitment: string;
   ownerAddress: string;
   coordinatorAddress: string;
+  leafIndex?: number;
 }): Promise<TransactionInstruction> {
   const amountBn = new BN(params.amount.toString());
   
@@ -57,8 +58,12 @@ export async function buildShieldedDepositTx(params: {
   );
 
   const coordinatorPubkey = new PublicKey(params.coordinatorAddress);
-  const coordinatorState = await (program.account as any).coordinatorState.fetch(coordinatorPubkey);
-  const leafIndex = coordinatorState.nextLeafIndex;
+  
+  let leafIndex = params.leafIndex;
+  if (leafIndex === undefined) {
+    const coordinatorState = await (program.account as any).coordinatorState.fetch(coordinatorPubkey);
+    leafIndex = coordinatorState.nextLeafIndex;
+  }
 
   const commitmentAccount = getCommitmentPda(
     coordinatorPubkey, 
