@@ -133,9 +133,9 @@ async function handleCommand(msg) {
       case "generate_proof": {
         const { circuit, inputs } = params;
 
-        // Pre-process inputs: convert any base58 token fields to BigInt strings
+        // Pre-process inputs: convert any base58 token/address fields to BigInt strings
         // so snarkjs/F.e() can parse them (it only accepts numeric strings or BigInts)
-        const TOKEN_FIELDS = ["token0", "token1", "tokenIn", "tokenOut", "token"];
+        const TOKEN_FIELDS = ["token0", "token1", "tokenIn", "tokenOut", "token", "recipient"];
         const processedInputs = { ...inputs };
         for (const field of TOKEN_FIELDS) {
           if (processedInputs[field] && typeof processedInputs[field] === "string" 
