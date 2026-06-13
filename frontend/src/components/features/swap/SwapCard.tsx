@@ -13,7 +13,7 @@ import { useSdkStore } from "@/stores/sdkStore";
 import { TESTNET_TOKENS, type Token } from "@/config/tokens";
 import { parseTokenAmount, formatTokenAmount, transactionExplorerUrl } from "@/lib/format";
 import { calculatePriceImpact, getPriceImpactVariant } from "@/lib/priceImpact";
-import { FEE_TIERS, estimateSwapOutputSafe, tokenToBigInt2 } from "@zylith/sdk";
+import { FEE_TIERS, estimateSwapOutputSafe } from "@zylith/sdk";
 import type { Note, PoolKey } from "@zylith/sdk";
 import { cn } from "@/lib/cn";
 import { motion, AnimatePresence } from "motion/react";
@@ -82,10 +82,9 @@ export function SwapCard() {
     ? parseTokenAmount(amountIn, tokenIn?.decimals ?? 18)
     : 0n;
 
-  // Get pool state for price impact calculation
   const poolKey: PoolKey | null = tokenIn && tokenOut ? {
-    token0: tokenToBigInt2(tokenIn.address) < tokenToBigInt2(tokenOut.address) ? tokenIn.address : tokenOut.address,
-    token1: tokenToBigInt2(tokenIn.address) < tokenToBigInt2(tokenOut.address) ? tokenOut.address : tokenIn.address,
+    token0: tokenIn.address < tokenOut.address ? tokenIn.address : tokenOut.address,
+    token1: tokenIn.address < tokenOut.address ? tokenOut.address : tokenIn.address,
     fee: FEE_TIERS.MEDIUM.fee,
     tickSpacing: FEE_TIERS.MEDIUM.tickSpacing,
   } : null;
@@ -94,7 +93,7 @@ export function SwapCard() {
   // Estimate output amount with slippage buffer
   const estimatedOut = useMemo(() => {
     if (!poolState || parsedAmountIn === 0n || !tokenIn || !tokenOut) return 0n;
-    const zeroForOne = tokenToBigInt2(tokenIn.address) < tokenToBigInt2(tokenOut.address);
+    const zeroForOne = tokenIn.address < tokenOut.address;
     return estimateSwapOutputSafe(poolState.sqrtPrice, parsedAmountIn, zeroForOne, FEE_TIERS.MEDIUM.fee);
   }, [poolState, parsedAmountIn, tokenIn, tokenOut]);
 
@@ -160,12 +159,12 @@ export function SwapCard() {
       if (!selectedNote) return;
 
       const [t0, t1] =
-        tokenToBigInt2(tokenIn.address) < tokenToBigInt2(tokenOut.address)
+        tokenIn.address < tokenOut.address
           ? [tokenIn.address, tokenOut.address]
           : [tokenOut.address, tokenIn.address];
 
       // Determine swap direction: zeroForOne = tokenIn is token0
-      const zeroForOne = tokenToBigInt2(tokenIn.address) < tokenToBigInt2(tokenOut.address);
+      const zeroForOne = tokenIn.address < tokenOut.address;
 
       // Estimate expected output using current pool state with slippage buffer.
       let expectedOut = 0n;
@@ -178,8 +177,8 @@ export function SwapCard() {
         );
       }
 
-      const MIN_SQRT_PRICE = 4295128740n;                              // TickMath.MIN_SQRT_RATIO + 1
-      const MAX_SQRT_PRICE = 1461446703485210103287273052203988822378723970341n; // TickMath.MAX_SQRT_RATIO - 1
+      const MIN_SQRT_PRICE = 4295128740n;                    // Orca CLMM min sqrt price (Q64.96)
+      const MAX_SQRT_PRICE = 79226673515401279992447579054n; // Orca CLMM max sqrt price (Q64.96, fits u128)
       const priceLimit = zeroForOne ? MIN_SQRT_PRICE : MAX_SQRT_PRICE;
 
       swap.mutate(

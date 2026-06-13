@@ -27,13 +27,19 @@ export function useWithdraw() {
       const snapshot = noteManager.snapshot();
 
       try {
+        const note = noteManager.getAllNotes().find((n) => n.commitment === noteCommitment);
+        if (!note) throw new Error("Note not found");
+
         const result = await client.withdraw({
           noteCommitment,
           recipient: address,
         });
         const txHash = await execute([
-          buildShieldedWithdrawTx({
+          await buildShieldedWithdrawTx({
             poolAddress: env.contracts.pool,
+            coordinatorAddress: env.contracts.coordinator,
+            ownerAddress: address,
+            token: note.token,
             calldata: result.calldata,
           }),
         ]);

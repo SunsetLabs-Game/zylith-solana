@@ -8,6 +8,7 @@ import { useSdkStore } from "@/stores/sdkStore";
 import { TESTNET_TOKENS } from "@/config/tokens";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowUpRight, History, ExternalLink } from "lucide-react";
+import { transactionExplorerUrl } from "@/lib/format";
 
 const STORAGE_KEY = "sunset-recent-withdrawals";
 
@@ -95,7 +96,7 @@ export function WithdrawCard() {
                     </div>
                   </div>
                   <a
-                    href={`https://explorer.solana.com/tx/${tx.txHash}`}
+                    href={transactionExplorerUrl(tx.txHash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 rounded-lg bg-white/5 text-muted-foreground hover:text-foreground transition-all"

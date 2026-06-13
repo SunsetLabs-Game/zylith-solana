@@ -15,7 +15,7 @@ import { useToast } from "@/components/ui/Toast";
 import { TESTNET_TOKENS, getTokenSymbol } from "@/config/tokens";
 import { formatTokenAmount, transactionExplorerUrl } from "@/lib/format";
 import { getPositionStatusText, getPositionStatusVariant } from "@/lib/positionStatus";
-import { FEE_TIERS, getAmountsForBurn, tokenToBigInt2 } from "@zylith/sdk";
+import { FEE_TIERS, getAmountsForBurn } from "@zylith/sdk";
 import type { PositionNote, PoolKey } from "@zylith/sdk";
 import { motion } from "motion/react";
 import { RefreshCcw, Shield, ExternalLink, Trash2, Layers, MapPin, Activity } from "lucide-react";
@@ -59,8 +59,8 @@ export function PositionsPage() {
   const token0 = TESTNET_TOKENS[0];
   const token1 = TESTNET_TOKENS[1];
   const poolKey: PoolKey | null = token0 && token1 ? {
-    token0: tokenToBigInt2(token0.address) < tokenToBigInt2(token1.address) ? token0.address : token1.address,
-    token1: tokenToBigInt2(token0.address) < tokenToBigInt2(token1.address) ? token1.address : token0.address,
+    token0: token0.address < token1.address ? token0.address : token1.address,
+    token1: token0.address < token1.address ? token1.address : token0.address,
     fee: FEE_TIERS.MEDIUM.fee,
     tickSpacing: FEE_TIERS.MEDIUM.tickSpacing,
   } : null;
@@ -107,7 +107,7 @@ export function PositionsPage() {
     if (!token0 || !token1) return;
 
     const [t0, t1] =
-      tokenToBigInt2(token0.address) < tokenToBigInt2(token1.address)
+      token0.address < token1.address
         ? [token0.address, token1.address]
         : [token1.address, token0.address];
 
@@ -340,35 +340,40 @@ export function PositionsPage() {
                 <span className="text-xs font-mono text-destructive uppercase">{burnTarget.commitment.slice(0, 12)}...</span>
               </div>
               
-              {burnEstimates && poolKey && (
-                <div className="space-y-4">
-                  <p className="text-[10px] font-heading tracking-widest text-destructive/60 uppercase">Estimated Recovery</p>
-                  <div className="space-y-3">
-                    {burnEstimates.amount0 > 0n && (
+              {burnEstimates && poolKey && (() => {
+                const tok0 = TESTNET_TOKENS.find(t => t.address.toLowerCase() === poolKey.token0.toLowerCase());
+                const tok1 = TESTNET_TOKENS.find(t => t.address.toLowerCase() === poolKey.token1.toLowerCase());
+                const symbol0 = tok0?.symbol ?? getTokenSymbol(poolKey.token0);
+                const symbol1 = tok1?.symbol ?? getTokenSymbol(poolKey.token1);
+                const dec0 = tok0?.decimals ?? 9;
+                const dec1 = tok1?.decimals ?? 9;
+
+                return (
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-heading tracking-widest text-destructive/60 uppercase">Estimated Recovery</p>
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <TokenIcon address={poolKey.token0} size="sm" />
-                          <span className="text-xs font-heading tracking-tight text-foreground uppercase pt-1">{getTokenSymbol(poolKey.token0)}</span>
+                          <span className="text-xs font-heading tracking-tight text-foreground uppercase pt-1">{symbol0}</span>
                         </div>
                         <span className="text-xl font-heading tracking-tight text-foreground uppercase pt-1">
-                          {formatTokenAmount(burnEstimates.amount0, 18)}
+                          {formatTokenAmount(burnEstimates.amount0, dec0, 4)}
                         </span>
                       </div>
-                    )}
-                    {burnEstimates.amount1 > 0n && (
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <TokenIcon address={poolKey.token1} size="sm" />
-                          <span className="text-xs font-heading tracking-tight text-foreground uppercase pt-1">{getTokenSymbol(poolKey.token1)}</span>
+                          <span className="text-xs font-heading tracking-tight text-foreground uppercase pt-1">{symbol1}</span>
                         </div>
                         <span className="text-xl font-heading tracking-tight text-foreground uppercase pt-1">
-                          {formatTokenAmount(burnEstimates.amount1, 18)}
+                          {formatTokenAmount(burnEstimates.amount1, dec1, 4)}
                         </span>
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
           <div className="flex gap-4">

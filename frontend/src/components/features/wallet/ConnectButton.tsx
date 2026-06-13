@@ -53,8 +53,9 @@ export function ConnectButton() {
     );
   }
 
+  const clusterParam = env.cluster && env.cluster !== "mainnet-beta" ? `?cluster=${env.cluster}` : "";
   const explorerUrl = env.explorerUrl
-    ? `${env.explorerUrl}/address/${address}`
+    ? `${env.explorerUrl}/address/${address}${clusterParam}`
     : null;
 
   return (

@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Droplets, History, ExternalLink, Settings2 } from "lucide-react";
 import { transactionExplorerUrl } from "@/lib/solana";
 import { parseTokenAmount } from "@/lib/format";
-import { FEE_TIERS, tokenToBigInt2 } from "@zylith/sdk";
+import { FEE_TIERS } from "@zylith/sdk";
 import type { PoolKey } from "@zylith/sdk";
 import { useMint } from "@/hooks/useMint";
 
@@ -66,7 +66,7 @@ export function AddLiquidityCard() {
   const handleAddLiquidity = () => {
     if (!canAddLiquidity || !note0 || !note1 || !token0 || !token1) return;
 
-    const isZeroForOne = tokenToBigInt2(token0.address) < tokenToBigInt2(token1.address);
+    const isZeroForOne = token0.address < token1.address;
     const [t0, t1] = isZeroForOne
       ? [token0.address, token1.address]
       : [token1.address, token0.address];

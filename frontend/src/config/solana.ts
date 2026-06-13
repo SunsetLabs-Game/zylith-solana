@@ -3,7 +3,6 @@ import { Program, BN } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import idl from "./zylith.json";
 import {
-  ZYLITH_PROGRAM_ID,
   getCommitmentPda,
 } from "./pda";
 
@@ -94,16 +93,93 @@ export function buildSubmitMerkleRootTx(params: {
   });
 }
 
-export function buildShieldedWithdrawTx(_params: {
+export async function buildShieldedWithdrawTx(params: {
   poolAddress: string;
   proofData?: string;
   calldata?: string[];
-}): TransactionInstruction {
-  return new TransactionInstruction({
-    programId: new PublicKey("Memo1UuS27vSdwMbsBv7mNoSqbiyfR3S66GE5Xq6E29"),
-    keys: [],
-    data: Buffer.from("Sunset Shield Withdraw", "utf-8"),
-  });
+  ownerAddress: string;
+  coordinatorAddress: string;
+  token: string;
+}): Promise<TransactionInstruction> {
+  const calldataStr = params.proofData || (params.calldata ? params.calldata.join(",") : "");
+  if (!calldataStr) throw new Error("No proof data or calldata provided");
+  const calldata = calldataStr.split(",");
+  
+  const inputs = {
+    root: Array.from(Buffer.from(calldata[8].replace("0x", "").padStart(64, "0"), "hex")),
+    nullifierHash: Array.from(Buffer.from(calldata[9].replace("0x", "").padStart(64, "0"), "hex")),
+    recipient: new PublicKey(params.ownerAddress),
+    token: new PublicKey(params.token),
+    amount: new BN(BigInt(calldata[11]).toString()),
+  };
+
+  const P = 21888242871839275222246405745257275088696311157297823662689037894645226208583n;
+  const aX = BigInt(calldata[0]);
+  const aY = BigInt(calldata[1]);
+  const aYNeg = P - (aY % P);
+
+  const proofBufs = [
+    aX, aYNeg,
+    BigInt(calldata[2]), BigInt(calldata[3]),
+    BigInt(calldata[4]), BigInt(calldata[5]),
+    BigInt(calldata[6]), BigInt(calldata[7])
+  ].map(n => Buffer.from(n.toString(16).padStart(64, "0"), "hex"));
+
+  const proof = Buffer.concat(proofBufs);
+
+  const poolPubkey = new PublicKey(params.poolAddress);
+  const coordinatorPubkey = new PublicKey(params.coordinatorAddress);
+  
+  const nullifierRecord = PublicKey.findProgramAddressSync(
+    [Buffer.from("nullifier"), Buffer.from(inputs.nullifierHash)],
+    program.programId
+  )[0];
+
+  const rootRecord = PublicKey.findProgramAddressSync(
+    [Buffer.from("root"), Buffer.from(inputs.root)],
+    program.programId
+  )[0];
+
+  const poolState = await (program.account as any).poolState.fetch(poolPubkey);
+  const token0 = poolState.token0;
+  const token1 = poolState.token1;
+  const fee = poolState.fee;
+
+  const [poolPda] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("pool"),
+      token0.toBuffer(),
+      token1.toBuffer(),
+      new BN(fee).toArrayLike(Buffer, "le", 4),
+    ],
+    program.programId
+  );
+
+  const poolTokenCustody = getAssociatedTokenAddressSync(
+    new PublicKey(params.token),
+    poolPda,
+    true
+  );
+
+  const recipientToken = getAssociatedTokenAddressSync(
+    new PublicKey(params.token),
+    new PublicKey(params.ownerAddress)
+  );
+
+  return await program.methods.shieldedWithdraw(inputs, proof)
+    .accounts({
+      pool: poolPubkey,
+      poolPda,
+      coordinator: coordinatorPubkey,
+      nullifierRecord,
+      rootRecord,
+      payer: new PublicKey(params.ownerAddress),
+      poolTokenCustody,
+      recipientToken,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
 }
 
 export async function buildShieldedSwapTx(params: {
@@ -112,6 +188,8 @@ export async function buildShieldedSwapTx(params: {
   sqrtPriceLimitX96: string;
   ownerAddress: string;
   coordinatorAddress: string;
+  tokenIn: string;
+  tokenOut: string;
 }): Promise<TransactionInstruction> {
   const calldata = params.proofData.split(",");
 
@@ -120,8 +198,8 @@ export async function buildShieldedSwapTx(params: {
     root: Array.from(Buffer.from(calldata[9].replace("0x", "").padStart(64, "0"), "hex")),
     nullifierHash: Array.from(Buffer.from(calldata[10].replace("0x", "").padStart(64, "0"), "hex")),
     newCommitment: Array.from(Buffer.from(calldata[11].replace("0x", "").padStart(64, "0"), "hex")),
-    tokenIn: new PublicKey(Buffer.from(calldata[12].replace("0x", ""), "hex")),
-    tokenOut: new PublicKey(Buffer.from(calldata[13].replace("0x", ""), "hex")),
+    tokenIn: new PublicKey(params.tokenIn),
+    tokenOut: new PublicKey(params.tokenOut),
     amountIn: new BN(BigInt(calldata[14]).toString()),
     amountOutMin: new BN(BigInt(calldata[15]).toString()),
   };
@@ -246,17 +324,68 @@ export async function buildShieldedMintTx(params: {
     .instruction();
 }
 
-export function buildShieldedBurnTx(_params: {
+export async function buildShieldedBurnTx(params: {
   poolAddress: string;
   proofData: string;
   positionCommitment: string;
   liquidityDelta: bigint;
-}): TransactionInstruction {
-  return new TransactionInstruction({
-    programId: new PublicKey("Memo1UuS27vSdwMbsBv7mNoSqbiyfR3S66GE5Xq6E29"),
-    keys: [],
-    data: Buffer.from("Sunset Shield Burn", "utf-8"),
-  });
+  ownerAddress: string;
+  coordinatorAddress: string;
+}): Promise<TransactionInstruction> {
+  const calldata = params.proofData.split(",");
+
+  const inputs = {
+    newCommitment0: Array.from(Buffer.from(calldata[10].replace("0x", "").padStart(64, "0"), "hex")),
+    newCommitment1: Array.from(Buffer.from(calldata[11].replace("0x", "").padStart(64, "0"), "hex")),
+    root: Array.from(Buffer.from(calldata[8].replace("0x", "").padStart(64, "0"), "hex")),
+    positionNullifierHash: Array.from(Buffer.from(calldata[9].replace("0x", "").padStart(64, "0"), "hex")),
+    tickLower: parseInt(calldata[12], 16),
+    tickUpper: parseInt(calldata[13], 16),
+  };
+
+  const P = 21888242871839275222246405745257275088696311157297823662689037894645226208583n;
+  const aX = BigInt(calldata[0]);
+  const aY = BigInt(calldata[1]);
+  const aYNeg = P - (aY % P);
+
+  const proofBufs = [
+    aX, aYNeg,
+    BigInt(calldata[2]), BigInt(calldata[3]),
+    BigInt(calldata[4]), BigInt(calldata[5]),
+    BigInt(calldata[6]), BigInt(calldata[7])
+  ].map(n => Buffer.from(n.toString(16).padStart(64, "0"), "hex"));
+
+  const proof = Buffer.concat(proofBufs);
+
+  const positionNullifierRecord = PublicKey.findProgramAddressSync(
+    [Buffer.from("nullifier"), Buffer.from(inputs.positionNullifierHash)],
+    program.programId
+  )[0];
+
+  const rootRecord = PublicKey.findProgramAddressSync(
+    [Buffer.from("root"), Buffer.from(inputs.root)],
+    program.programId
+  )[0];
+
+  const coordinatorPubkey = new PublicKey(params.coordinatorAddress);
+  const coordinatorState = await (program.account as any).coordinatorState.fetch(coordinatorPubkey);
+  const nextLeafIndex = coordinatorState.nextLeafIndex;
+
+  const newCommitment0Acc = getCommitmentPda(coordinatorPubkey, nextLeafIndex);
+  const newCommitment1Acc = getCommitmentPda(coordinatorPubkey, nextLeafIndex + 1);
+
+  return await program.methods.shieldedBurn(inputs, proof, new BN(params.liquidityDelta.toString()))
+    .accounts({
+      pool: new PublicKey(params.poolAddress),
+      coordinator: coordinatorPubkey,
+      positionNullifierRecord,
+      rootRecord,
+      newCommitment0Acc,
+      newCommitment1Acc,
+      payer: new PublicKey(params.ownerAddress),
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
 }
 
 export function buildPoolMintTx(_params: {

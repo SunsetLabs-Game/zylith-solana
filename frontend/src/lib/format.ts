@@ -58,7 +58,8 @@ import { env } from "@/config/env";
  */
 export function transactionExplorerUrl(txHash: string): string {
   if (env.explorerUrl) {
-    return `${env.explorerUrl.replace(/\/$/, "")}/tx/${txHash}`;
+    const clusterParam = env.cluster && env.cluster !== "mainnet-beta" ? `?cluster=${env.cluster}` : "";
+    return `${env.explorerUrl.replace(/\/$/, "")}/tx/${txHash}${clusterParam}`;
   }
 
   return txHash;

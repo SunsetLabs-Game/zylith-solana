@@ -46,6 +46,8 @@ export function useSwap() {
             sqrtPriceLimitX96: input.sqrtPriceLimit.toString(),
             ownerAddress: address,
             coordinatorAddress: env.contracts.coordinator,
+            tokenIn: input.tokenIn,
+            tokenOut: input.tokenOut,
           }),
         ]);
         await client.saveNotes();
