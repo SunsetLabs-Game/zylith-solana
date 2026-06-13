@@ -57,6 +57,7 @@ export async function burn(
     amount: 0n,
     token: params.token0,
     commitment: "pending_burn0_" + out0Nullifier,
+    isYield: true,
   });
   noteManager.addNote({
     secret: out1Secret,
@@ -64,6 +65,7 @@ export async function burn(
     amount: 0n,
     token: params.token1,
     commitment: "pending_burn1_" + out1Nullifier,
+    isYield: true,
   });
 
   // Mark position spent optimistically

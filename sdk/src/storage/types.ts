@@ -10,6 +10,7 @@ export interface Note {
   commitment: string; // decimal string
   nullifierHash: string; // decimal string
   spent: boolean;
+  isYield?: boolean;
 }
 
 /** A shielded position note representing an LP position */

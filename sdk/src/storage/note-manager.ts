@@ -28,6 +28,7 @@ export class NoteManager {
     leafIndex?: number;
     commitment?: string;
     txHash?: string;
+    isYield?: boolean;
   }): Note {
     const { low, high } = u256Split(params.amount);
     const computed = computeCommitment(
@@ -49,6 +50,7 @@ export class NoteManager {
       commitment,
       nullifierHash,
       spent: false,
+      isYield: params.isYield,
     };
 
     this.db.notes.push(note);
@@ -215,6 +217,45 @@ export class NoteManager {
           const json = await decrypt(encrypted, password);
           manager.db = JSON.parse(json);
           console.log("[NoteManager] Decryption successful!");
+
+          // Retroactive yield note migration:
+          // If the user has spent positions, any unspent notes with fractional amounts (not multiples of 1.0 token)
+          // are flagged as isYield: true.
+          let migrated = false;
+          const spentPositions = manager.db.positions.filter((p) => p.spent);
+          if (spentPositions.length > 0) {
+            for (const note of manager.db.notes) {
+              if (!note.spent && !note.isYield) {
+                const amount = BigInt(note.amount);
+                const tokenLower = note.token.toLowerCase();
+                const isUSDC = tokenLower === "4azxbzlhuufq8pcadstcphuh86kjdbb5z2yegvzswhbz";
+                const isSOL = tokenLower === "5jut2tnkac1vmhrud36xylejwtmzgf1fs7bugxusbcvt";
+
+                let isYieldNote = false;
+                if (isUSDC) {
+                  // USDC has 6 decimals. Check if amount is not a multiple of 1 USDC (1,000,000)
+                  isYieldNote = amount % 1_000_000n !== 0n;
+                } else if (isSOL) {
+                  // SOL has 9 decimals. Check if amount is not a multiple of 1 SOL (1,000_000_000)
+                  isYieldNote = amount % 1_000_000_000n !== 0n;
+                } else {
+                  // Fallback: check if not a multiple of 10^6 and 10^9
+                  isYieldNote = amount % 1_000_000n !== 0n && amount % 1_000_000_000n !== 0n;
+                }
+
+                if (isYieldNote) {
+                  console.log(`[NoteManager] Retroactively marking note ${note.commitment.slice(0, 10)}... as isYield: true`);
+                  note.isYield = true;
+                  migrated = true;
+                }
+              }
+            }
+          }
+
+          if (migrated) {
+            console.log("[NoteManager] Migration completed. Saving updated notes...");
+            await manager.save();
+          }
         } catch (err) {
           console.error("[NoteManager] Decryption failed:", err);
           throw err;

@@ -32,7 +32,7 @@ export const FEE_TIERS = {
   /** 0.05% fee, tick spacing 10 */
   LOW: { fee: 500, tickSpacing: 10 },
   /** 0.30% fee, tick spacing 60 */
-  MEDIUM: { fee: 3000, tickSpacing: 60 },
+  MEDIUM: { fee: 3001, tickSpacing: 60 },
   /** 1.00% fee, tick spacing 200 */
   HIGH: { fee: 10000, tickSpacing: 200 },
 } as const;

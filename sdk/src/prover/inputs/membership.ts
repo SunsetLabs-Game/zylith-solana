@@ -37,7 +37,7 @@ export function generateMembershipInputs(
   return {
     root: merkleProof.root,
     nullifierHash,
-    recipient,
+    recipient: tokenToBigInt2(recipient).toString(),
     secret,
     nullifier,
     amount_low: low.toString(),
