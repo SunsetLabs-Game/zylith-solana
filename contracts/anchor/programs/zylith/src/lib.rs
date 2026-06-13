@@ -186,14 +186,19 @@ pub mod zylith {
         amount_low[24..32].copy_from_slice(&inputs.amount.to_be_bytes()); // amount is u64
         let amount_high = [0u8; 32];
 
+        let mut recipient_bytes = ctx.accounts.payer.key().to_bytes();
+        recipient_bytes[0] &= 0x0f;
+        let mut token_bytes = inputs.token.to_bytes();
+        token_bytes[0] &= 0x0f;
+
         // Format public inputs matching Circuit: root, nullifierHash, recipient, amount_low, amount_high, token
         let public_inputs: [[u8; 32]; 6] = [
             inputs.root,
             inputs.nullifier_hash,
-            ctx.accounts.payer.key().to_bytes(), // recipient is payer
+            recipient_bytes,
             amount_low,
             amount_high,
-            inputs.token.to_bytes(),
+            token_bytes,
         ];
 
         let verifying_key = groth16_solana::groth16::Groth16Verifyingkey {
@@ -256,15 +261,22 @@ pub mod zylith {
         let mut amount_out_min_bytes = [0u8; 32];
         amount_out_min_bytes[24..32].copy_from_slice(&inputs.amount_out_min.to_be_bytes());
 
+        let mut token_in_bytes = inputs.token_in.to_bytes();
+        token_in_bytes[0] &= 0x0f;
+        let mut token_out_bytes = inputs.token_out.to_bytes();
+        token_out_bytes[0] &= 0x0f;
+
+        // Note: snarkjs outputs are placed before public inputs in publicSignals.
+        // changeCommitment is a circuit output — it must be first to match the VK's IC ordering.
         let public_inputs: [[u8; 32]; 8] = [
-            inputs.root,
-            inputs.nullifier_hash,
-            inputs.new_commitment,
-            inputs.token_in.to_bytes(),
-            inputs.token_out.to_bytes(),
-            amount_in_bytes,
-            amount_out_min_bytes,
-            inputs.change_commitment,
+            inputs.change_commitment,  // circuit output (publicSignals[0])
+            inputs.root,               // publicSignals[1]
+            inputs.nullifier_hash,     // publicSignals[2]
+            inputs.new_commitment,     // publicSignals[3]
+            token_in_bytes,            // publicSignals[4] (252-bit truncated)
+            token_out_bytes,           // publicSignals[5] (252-bit truncated)
+            amount_in_bytes,           // publicSignals[6]
+            amount_out_min_bytes,      // publicSignals[7]
         ];
 
         let mut proof_a = [0u8; 64];
@@ -573,12 +585,14 @@ pub mod zylith {
         let mut tick_upper_bytes = [0u8; 32];
         tick_upper_bytes[28..32].copy_from_slice(&inputs_box.tick_upper.to_be_bytes());
 
-        // Note: snarkjs outputs are placed before public inputs
+        // Note: snarkjs outputs are placed before public inputs.
+        // In burn.circom, all 6 public signals are input signals, so they are ordered as declared:
+        // root, positionNullifierHash, newCommitment0, newCommitment1, tickLower, tickUpper
         let public_inputs: [[u8; 32]; 6] = [
-            inputs_box.new_commitment0,
-            inputs_box.new_commitment1,
             inputs_box.root,
             inputs_box.position_nullifier_hash,
+            inputs_box.new_commitment0,
+            inputs_box.new_commitment1,
             tick_lower_bytes,
             tick_upper_bytes,
         ];

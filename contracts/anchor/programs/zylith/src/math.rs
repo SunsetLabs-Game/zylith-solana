@@ -3,8 +3,110 @@ use anchor_lang::prelude::*;
 pub const Q96: u128 = 1 << 96;
 pub const FEE_DENOMINATOR: u64 = 1_000_000;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct U256 {
+    pub low: u128,
+    pub high: u128,
+}
+
+impl U256 {
+    pub fn zero() -> Self {
+        Self { low: 0, high: 0 }
+    }
+
+    pub fn from_u128(val: u128) -> Self {
+        Self { low: val, high: 0 }
+    }
+
+    pub fn add(self, other: Self) -> Self {
+        let (low, carry) = self.low.overflowing_add(other.low);
+        let high = self.high + other.high + if carry { 1 } else { 0 };
+        Self { low, high }
+    }
+
+    pub fn sub(self, other: Self) -> Self {
+        let (low, borrow) = self.low.overflowing_sub(other.low);
+        let high = self.high - other.high - if borrow { 1 } else { 0 };
+        Self { low, high }
+    }
+
+    pub fn shl(self, shift: u32) -> Self {
+        if shift == 0 {
+            return self;
+        }
+        if shift >= 128 {
+            Self {
+                low: 0,
+                high: self.low << (shift - 128),
+            }
+        } else {
+            Self {
+                low: self.low << shift,
+                high: (self.high << shift) | (self.low >> (128 - shift)),
+            }
+        }
+    }
+
+    pub fn shr(self, shift: u32) -> Self {
+        if shift == 0 {
+            return self;
+        }
+        if shift >= 128 {
+            Self {
+                low: self.high >> (shift - 128),
+                high: 0,
+            }
+        } else {
+            Self {
+                low: (self.low >> shift) | (self.high << (128 - shift)),
+                high: self.high >> shift,
+            }
+        }
+    }
+
+    pub fn mul(a: u128, b: u128) -> Self {
+        let mut result = Self::zero();
+        let mut temp = Self::from_u128(a);
+        let mut b_val = b;
+        while b_val > 0 {
+            if b_val & 1 == 1 {
+                result = result.add(temp);
+            }
+            temp = temp.shl(1);
+            b_val >>= 1;
+        }
+        result
+    }
+
+    pub fn div_u128(self, denom: u128) -> u128 {
+        if denom == 0 {
+            panic!("Division by zero");
+        }
+        let mut quotient = Self::zero();
+        let mut remainder = Self::zero();
+        let denom_256 = Self::from_u128(denom);
+
+        for i in (0..256).rev() {
+            remainder = remainder.shl(1);
+            if (self.shr(i).low & 1) == 1 {
+                remainder.low |= 1;
+            }
+            if remainder >= denom_256 {
+                remainder = remainder.sub(denom_256);
+                if i >= 128 {
+                    quotient.high |= 1 << (i - 128);
+                } else {
+                    quotient.low |= 1 << i;
+                }
+            }
+        }
+        quotient.low
+    }
+}
+
 pub fn mul_div(a: u128, b: u128, denominator: u128) -> u128 {
-    (a * b) / denominator
+    let prod = U256::mul(a, b);
+    prod.div_u128(denominator)
 }
 
 pub fn validate_range(
