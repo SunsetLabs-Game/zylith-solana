@@ -5,7 +5,7 @@ use std::str::FromStr;
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::commitment_config::CommitmentConfig;
-use solana_transaction_status::{UiMessage, UiInstruction};
+use solana_transaction_status::UiMessage;
 use tokio::time::sleep;
 
 use crate::error::AspError;

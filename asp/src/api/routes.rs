@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::middleware;
 use axum::routing::{get, post};
 use axum::Router;
-use tower_governor::{governor::GovernorConfigBuilder, key_extractor::SmartIpKeyExtractor, GovernorLayer};
+// use tower_governor::{governor::GovernorConfigBuilder, key_extractor::SmartIpKeyExtractor, GovernorLayer};
 use tower_http::cors::CorsLayer;
 
 use crate::AppState;
@@ -38,14 +38,14 @@ fn base_router(state: Arc<AppState>) -> Router {
 /// Production router with rate limiting, logging, and CORS.
 pub fn create_router(state: Arc<AppState>) -> Router {
     // 2 requests/sec sustained, burst of 30. Uses SmartIpKeyExtractor for robust IP detection.
-    let governor_conf = Arc::new(
-        GovernorConfigBuilder::default()
-            .key_extractor(SmartIpKeyExtractor)
-            .per_second(2)
-            .burst_size(30)
-            .finish()
-            .expect("Failed to build rate limiter config"),
-    );
+    // let governor_conf = Arc::new(
+    //     GovernorConfigBuilder::default()
+    //         .key_extractor(SmartIpKeyExtractor)
+    //         .per_second(2)
+    //         .burst_size(30)
+    //         .finish()
+    //         .expect("Failed to build rate limiter config"),
+    // );
 
     base_router(state)
         .layer(middleware::from_fn(request_logger))
