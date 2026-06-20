@@ -1,3 +1,4 @@
+#![allow(clippy::should_implement_trait)]
 use anchor_lang::prelude::*;
 
 pub const Q96: u128 = 1 << 96;

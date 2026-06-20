@@ -13,6 +13,7 @@ const MAX_TREE_LEAVES: u32 = 1 << 20;
 /// Verify that `account_key` is the PDA for a commitment at `leaf_index`
 /// under the given coordinator. Prevents arbitrary accounts being passed
 /// as commitment slots in shielded_swap / shielded_mint / shielded_burn.
+#[allow(dead_code)]
 fn validate_commitment_pda(
     account_key: Pubkey,
     coordinator_key: Pubkey,
