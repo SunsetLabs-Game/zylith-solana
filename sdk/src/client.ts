@@ -113,7 +113,7 @@ export class ZylithClient {
 
   async withdraw(params: WithdrawParams): Promise<WithdrawResult> {
     this.assertInit();
-    return withdraw(params, this.assertAsp(), this.noteManager);
+    return withdraw({ ...params, useAspProver: true }, this.assertAsp(), this.noteManager);
   }
 
   async swap(params: SwapParams): Promise<SwapResult> {
