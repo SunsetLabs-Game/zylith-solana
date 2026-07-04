@@ -1,0 +1,164 @@
+import { u256Split, generateRandomSecret, tokenToBigInt2 } from "../utils/conversions.js";
+import { ClientProver } from "../prover/prover.js";
+import { formatProofForSolana } from "../utils/proof.js";
+import { generateBurnInputs } from "../prover/inputs/burn.js";
+export async function burn(params, asp, noteManager) {
+    const positions = noteManager.getAllPositions();
+    const position = positions.find((p) => p.commitment === params.positionCommitment && !p.spent);
+    if (!position)
+        throw new Error("Position not found or already spent");
+    if (position.leafIndex === undefined)
+        throw new Error("Position has no leaf index");
+    const out0Secret = generateRandomSecret();
+    const out0Nullifier = generateRandomSecret();
+    const out1Secret = generateRandomSecret();
+    const out1Nullifier = generateRandomSecret();
+    // Sort output notes numerically based on token BigInt representation
+    // This satisfies the token0 < token1 constraint in PrivateBurn.circom
+    const token0IsTokenA = tokenToBigInt2(params.token0) < tokenToBigInt2(params.token1);
+    const tokenA = token0IsTokenA ? params.token0 : params.token1;
+    const tokenB = token0IsTokenA ? params.token1 : params.token0;
+    const amtA = token0IsTokenA ? params.amount0Out : params.amount1Out;
+    const amtB = token0IsTokenA ? params.amount1Out : params.amount0Out;
+    const secretA = token0IsTokenA ? out0Secret : out1Secret;
+    const nullifierA = token0IsTokenA ? out0Nullifier : out1Nullifier;
+    const secretB = token0IsTokenA ? out1Secret : out0Secret;
+    const nullifierB = token0IsTokenA ? out1Nullifier : out0Nullifier;
+    const { low: outALow, high: outAHigh } = u256Split(amtA);
+    const { low: outBLow, high: outBHigh } = u256Split(amtB);
+    // Save placeholder notes BEFORE calling the ASP so secrets survive even if
+    // the response processing fails. Same pattern as swap.ts.
+    noteManager.addNote({
+        secret: secretA,
+        nullifier: nullifierA,
+        amount: 0n,
+        token: tokenA,
+        commitment: "pending_burn0_" + nullifierA,
+        isYield: true,
+    });
+    noteManager.addNote({
+        secret: secretB,
+        nullifier: nullifierB,
+        amount: 0n,
+        token: tokenB,
+        commitment: "pending_burn1_" + nullifierB,
+        isYield: true,
+    });
+    // Mark position spent optimistically
+    noteManager.markSpent(position.nullifierHash);
+    await noteManager.save();
+    let response = {};
+    let solanaProof;
+    if (params.useAspProver) {
+        response = await asp.burn({
+            pool_key: {
+                token_0: params.poolKey.token0,
+                token_1: params.poolKey.token1,
+                fee: params.poolKey.fee,
+                tick_spacing: params.poolKey.tickSpacing,
+            },
+            position_note: {
+                secret: position.secret,
+                nullifier: position.nullifier,
+                liquidity: position.liquidity,
+                tick_lower: position.tickLower,
+                tick_upper: position.tickUpper,
+                leaf_index: position.leafIndex,
+            },
+            output_note_0: {
+                secret: secretA,
+                nullifier: nullifierA,
+                amount_low: outALow.toString(),
+                amount_high: outAHigh.toString(),
+                token: tokenA,
+            },
+            output_note_1: {
+                secret: secretB,
+                nullifier: nullifierB,
+                amount_low: outBLow.toString(),
+                amount_high: outBHigh.toString(),
+                token: tokenB,
+            },
+            liquidity: Number(params.liquidity),
+        });
+    }
+    else {
+        // 1. Fetch Merkle tree state
+        const proofRes = await asp.getTreePath(position.leafIndex);
+        // 2. Generate inputs
+        const circuitInputs = generateBurnInputs({
+            positionNote: {
+                secret: position.secret,
+                nullifier: position.nullifier,
+                tickLower: position.tickLower,
+                tickUpper: position.tickUpper,
+                liquidity: BigInt(position.liquidity),
+                merkleProof: {
+                    root: proofRes.root,
+                    pathElements: proofRes.path_elements,
+                    pathIndices: proofRes.path_indices,
+                }
+            },
+            outputNote0: {
+                secret: secretA,
+                nullifier: nullifierA,
+                amount: amtA,
+                token: tokenA,
+            },
+            outputNote1: {
+                secret: secretB,
+                nullifier: nullifierB,
+                amount: amtB,
+                token: tokenB,
+            },
+        });
+        // 3. Generate proof locally
+        const prover = new ClientProver();
+        const { proof, publicSignals } = await prover.generateProof("burn", circuitInputs);
+        // 4. Format proof for Solana
+        solanaProof = formatProofForSolana(proof);
+        response = {
+            new_commitment_0: circuitInputs.newCommitment0,
+            new_commitment_1: circuitInputs.newCommitment1,
+            amount_0: amtA.toString(),
+            amount_1: amtB.toString(),
+            calldata: [],
+            final_root: proofRes.root,
+        };
+        // public signals: [root, nullifierHash, newCommitment0, newCommitment1, token0, token1, amount0Out, amount1Out]
+    }
+    // Update placeholder notes with real commitments and amounts from ASP response.
+    // The ASP echoes back the amounts it used in the ZK proof — these are authoritative.
+    const actual0 = BigInt(response.amount_0);
+    if (actual0 > 0n) {
+        noteManager.updateNote(nullifierA, response.new_commitment_0, actual0);
+    }
+    const actual1 = BigInt(response.amount_1);
+    if (actual1 > 0n) {
+        noteManager.updateNote(nullifierB, response.new_commitment_1, actual1);
+    }
+    // Sync leaf indexes from ASP for output notes
+    const commitmentsToSync = [
+        response.new_commitment_0,
+        response.new_commitment_1,
+    ].filter((c) => c && c !== "0");
+    if (commitmentsToSync.length > 0) {
+        try {
+            const syncResponse = await asp.syncCommitments(commitmentsToSync);
+            noteManager.updateLeafIndexes(syncResponse);
+        }
+        catch {
+            // Non-fatal: leaf indexes will be resolved on next syncNotes()
+        }
+    }
+    return {
+        calldata: response.calldata,
+        finalRoot: response.final_root,
+        newCommitment0: response.new_commitment_0,
+        newCommitment1: response.new_commitment_1,
+        amount0: actual0,
+        amount1: actual1,
+        solanaProof,
+    };
+}
+//# sourceMappingURL=burn.js.map

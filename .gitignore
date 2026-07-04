@@ -60,3 +60,7 @@ node_modules/
 !circuits/build/**/mint_js/
 !circuits/build/**/mint_js/**
 !circuits/build/**/verification_key.json
+
+# Un-ignore frontend/sdk-local/dist since dist/ is globally ignored
+!frontend/sdk-local/dist/
+!frontend/sdk-local/dist/**

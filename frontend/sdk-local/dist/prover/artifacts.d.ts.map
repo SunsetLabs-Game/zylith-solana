@@ -1,0 +1,1 @@
+{"version":3,"file":"artifacts.d.ts","sourceRoot":"","sources":["../../src/prover/artifacts.ts"],"names":[],"mappings":"AAIA,MAAM,MAAM,WAAW,GAAG,YAAY,GAAG,MAAM,GAAG,MAAM,GAAG,MAAM,CAAC;AAElE,MAAM,WAAW,gBAAgB;IAC/B,QAAQ,EAAE,MAAM,CAAC;IACjB,QAAQ,EAAE,MAAM,CAAC;IACjB,QAAQ,EAAE,MAAM,CAAC;CAClB;AAKD,0EAA0E;AAC1E,wBAAgB,mBAAmB,CAAC,OAAO,EAAE,WAAW,GAAG,gBAAgB,CAO1E"}

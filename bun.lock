@@ -17,7 +17,7 @@
         "@solana/wallet-adapter-wallets": "^0.19.38",
         "@solana/web3.js": "^1.98.4",
         "@tanstack/react-query": "^5.62.0",
-        "@zylith/sdk": "workspace:*",
+        "@zylith/sdk": "file:./sdk-local",
         "bs58": "^6.0.0",
         "buffer": "^6.0.3",
         "clsx": "^2.1.1",
@@ -2399,6 +2399,8 @@
     "@xrplf/isomorphic/eventemitter3": ["eventemitter3@5.0.1", "", {}, "sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA=="],
 
     "@xrplf/isomorphic/ws": ["ws@8.18.3", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="],
+
+    "@zylith/frontend/@zylith/sdk": ["@zylith/sdk@file:frontend/sdk-local", { "dependencies": { "@coral-xyz/anchor": "^0.32.1", "@solana/spl-token": "^0.4.14", "@solana/web3.js": "^1.98.4", "bs58": "^6.0.0", "circomlibjs": "^0.1.7", "dotenv": "^17.4.2", "snarkjs": "^0.7.0" }, "devDependencies": { "@types/node": "^22.0.0", "@types/snarkjs": "^0.7.0", "typescript": "^5.6.0", "vitest": "^2.0.0" } }],
 
     "anymatch/picomatch": ["picomatch@2.3.2", "", {}, "sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA=="],
 
