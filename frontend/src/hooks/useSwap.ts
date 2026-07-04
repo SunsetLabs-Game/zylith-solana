@@ -24,6 +24,7 @@ interface SwapInput {
 export function useSwap() {
   const client = useSdkStore((s) => s.client);
   const refreshBalances = useSdkStore((s) => s.refreshBalances);
+  const startCooldown = useSdkStore((s) => s.startCooldown);
   const { execute, address } = useWalletSession();
   const { toast } = useToast();
 
@@ -60,6 +61,7 @@ export function useSwap() {
     },
     onSuccess: (data, variables) => {
       refreshBalances();
+      startCooldown(15);
       queryClient.invalidateQueries({
         queryKey: queryKeys.poolState(variables.poolKey),
       });

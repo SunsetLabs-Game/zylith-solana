@@ -20,6 +20,7 @@ export function WithdrawCard() {
   const { connected: isConnected } = useWallet();
   const isInitialized = useSdkStore((s) => s.isInitialized);
   const unspentNotes = useSdkStore((s) => s.unspentNotes);
+  const cooldownSeconds = useSdkStore((s) => s.cooldownSeconds);
   const [selectedToken, setSelectedToken] = useState(TESTNET_TOKENS[0]);
   const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -164,10 +165,14 @@ export function WithdrawCard() {
               size="lg"
               className="w-full h-16 rounded-2xl bg-gradient-to-r from-solana-purple via-accent to-accent border-none shadow-[0_0_30px_rgba(153,69,255,0.1)]"
               onClick={handleWithdraw}
-              disabled={!selectedNote || !isInitialized || !isConnected || withdraw.isPending}
+              disabled={!selectedNote || !isInitialized || !isConnected || withdraw.isPending || cooldownSeconds > 0}
               loading={withdraw.isPending}
             >
-              {withdraw.isPending ? "PROVING" : `UNSHIELD ${selectedToken?.symbol ?? ""}`}
+              {withdraw.isPending 
+                ? "PROVING" 
+                : cooldownSeconds > 0 
+                  ? `SYNCING WITH ASP (${cooldownSeconds}s)` 
+                  : `UNSHIELD ${selectedToken?.symbol ?? ""}`}
             </Button>
           </div>
         </div>

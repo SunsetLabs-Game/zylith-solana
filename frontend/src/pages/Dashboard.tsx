@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -12,6 +13,10 @@ import { usePoolState } from "@/hooks/usePoolState";
 import { getPositionStatusVariant, isPositionInRange } from "@/lib/positionStatus";
 import { FEE_TIERS } from "@zylith/sdk";
 import { Link } from "react-router";
+import { useWalletSession } from "@/providers/WalletProvider";
+import { useToast } from "@/components/ui/Toast";
+import { Button } from "@/components/ui/Button";
+import { env } from "@/config/env";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -47,6 +52,32 @@ export function Dashboard() {
   } : null;
   const { data: poolState } = usePoolState(poolKey);
 
+  const [faucetLoading, setFaucetLoading] = useState(false);
+  const { address } = useWalletSession();
+  const { toast } = useToast();
+
+  const handleClaimTokens = async () => {
+    if (!address) return;
+    setFaucetLoading(true);
+    try {
+      const response = await fetch(`${env.aspUrl}/faucet`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet: address }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast("Claim successful! Devnet SOL & USDC minted.", "success");
+      } else {
+        toast(`Claim failed: ${data.error || data.message}`, "error");
+      }
+    } catch (err: any) {
+      toast(`Claim failed: ${err.message}`, "error");
+    } finally {
+      setFaucetLoading(false);
+    }
+  };
+
   const tokenEntries = Object.entries(balances).filter(([, amt]) => amt > 0n);
 
   return (
@@ -69,9 +100,22 @@ export function Dashboard() {
             </p>
           </div>
           
-          <div className="flex items-center gap-4 p-3 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl">
-            <Activity className="w-4 h-4 text-primary animate-pulse" />
-            <span className="text-[9px] text-foreground font-heading tracking-widest uppercase">Node_Connected</span>
+          <div className="flex items-center gap-4">
+            {address && (
+              <Button
+                variant="ghost"
+                size="sm"
+                loading={faucetLoading}
+                onClick={handleClaimTokens}
+                className="rounded-2xl border border-primary/40 bg-primary/10 text-primary hover:bg-primary hover:text-background text-[9px] font-heading tracking-widest uppercase py-3 px-5 h-auto transition-all duration-300 shadow-[0_0_15px_rgba(20,241,149,0.15)] animate-pulse hover:animate-none"
+              >
+                Claim Devnet Tokens
+              </Button>
+            )}
+            <div className="flex items-center gap-4 p-3 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl">
+              <Activity className="w-4 h-4 text-primary animate-pulse" />
+              <span className="text-[9px] text-foreground font-heading tracking-widest uppercase">Node_Connected</span>
+            </div>
           </div>
         </motion.div>
 

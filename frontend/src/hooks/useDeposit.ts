@@ -20,6 +20,7 @@ interface DepositInput {
 export function useDeposit() {
   const client = useSdkStore((s) => s.client);
   const refreshBalances = useSdkStore((s) => s.refreshBalances);
+  const startCooldown = useSdkStore((s) => s.startCooldown);
   const { execute, address } = useWalletSession();
   const { toast } = useToast();
 
@@ -72,6 +73,7 @@ export function useDeposit() {
     },
     onSuccess: (data) => {
       refreshBalances();
+      startCooldown(15);
       queryClient.invalidateQueries({ queryKey: queryKeys.treeRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.merkleRoot() });
       toast(`Deposit confirmed (leaf ${data.leafIndex})`, "success");

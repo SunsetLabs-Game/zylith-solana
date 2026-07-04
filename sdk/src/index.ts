@@ -40,7 +40,7 @@ export {
   tokenToBigInt2,
 } from "./utils/conversions.js";
 
-export { getAmountsForBurn, estimateSwapOutput, estimateSwapOutputSafe } from "./utils/clmm.js";
+export { getAmountsForBurn, estimateSwapOutput, estimateSwapOutputSafe, estimateSwapOutputConstantProduct, estimateSwapOutputConstantProductSafe } from "./utils/clmm.js";
 export { formatProofForSolana } from "./utils/proof.js";
 
 export {

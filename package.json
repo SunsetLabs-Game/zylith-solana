@@ -4,7 +4,8 @@
   "description": "Shielded CLMM for Bitcoin wrappers and stablecoins on Solana",
   "workspaces": [
     "frontend",
-    "sdk"
+    "sdk",
+    "my-agent"
   ],
   "scripts": {
     "dev": "bun run dev:frontend",
@@ -51,12 +52,15 @@
     "stablecoins",
     "usdt0"
   ],
-
   "author": "Zylith Protocol",
   "license": "MIT",
   "overrides": {
     "rollup": "^4.59.0",
     "minimatch": "^5.1.7",
-    "bn.js": "^5.2.3"
+    "bn.js": "^5.2.3",
+    "ai": "^7.0.0"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

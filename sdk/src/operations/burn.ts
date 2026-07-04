@@ -2,7 +2,7 @@
 import type { AspClient } from "../asp/client.js";
 import type { NoteManager } from "../storage/note-manager.js";
 import type { PoolKey } from "../types/index.js";
-import { u256Split, generateRandomSecret } from "../utils/conversions.js";
+import { u256Split, generateRandomSecret, tokenToBigInt2 } from "../utils/conversions.js";
 import { ClientProver } from "../prover/prover.js";
 import { formatProofForSolana } from "../utils/proof.js";
 import { generateBurnInputs } from "../prover/inputs/burn.js";
@@ -46,25 +46,40 @@ export async function burn(
   const out1Secret = generateRandomSecret();
   const out1Nullifier = generateRandomSecret();
 
-  const { low: out0Low, high: out0High } = u256Split(params.amount0Out);
-  const { low: out1Low, high: out1High } = u256Split(params.amount1Out);
+  // Sort output notes numerically based on token BigInt representation
+  // This satisfies the token0 < token1 constraint in PrivateBurn.circom
+  const token0IsTokenA = tokenToBigInt2(params.token0) < tokenToBigInt2(params.token1);
+
+  const tokenA = token0IsTokenA ? params.token0 : params.token1;
+  const tokenB = token0IsTokenA ? params.token1 : params.token0;
+
+  const amtA = token0IsTokenA ? params.amount0Out : params.amount1Out;
+  const amtB = token0IsTokenA ? params.amount1Out : params.amount0Out;
+
+  const secretA = token0IsTokenA ? out0Secret : out1Secret;
+  const nullifierA = token0IsTokenA ? out0Nullifier : out1Nullifier;
+  const secretB = token0IsTokenA ? out1Secret : out0Secret;
+  const nullifierB = token0IsTokenA ? out1Nullifier : out0Nullifier;
+
+  const { low: outALow, high: outAHigh } = u256Split(amtA);
+  const { low: outBLow, high: outBHigh } = u256Split(amtB);
 
   // Save placeholder notes BEFORE calling the ASP so secrets survive even if
   // the response processing fails. Same pattern as swap.ts.
   noteManager.addNote({
-    secret: out0Secret,
-    nullifier: out0Nullifier,
+    secret: secretA,
+    nullifier: nullifierA,
     amount: 0n,
-    token: params.token0,
-    commitment: "pending_burn0_" + out0Nullifier,
+    token: tokenA,
+    commitment: "pending_burn0_" + nullifierA,
     isYield: true,
   });
   noteManager.addNote({
-    secret: out1Secret,
-    nullifier: out1Nullifier,
+    secret: secretB,
+    nullifier: nullifierB,
     amount: 0n,
-    token: params.token1,
-    commitment: "pending_burn1_" + out1Nullifier,
+    token: tokenB,
+    commitment: "pending_burn1_" + nullifierB,
     isYield: true,
   });
 
@@ -92,18 +107,18 @@ export async function burn(
         leaf_index: position.leafIndex,
       },
       output_note_0: {
-        secret: out0Secret,
-        nullifier: out0Nullifier,
-        amount_low: out0Low.toString(),
-        amount_high: out0High.toString(),
-        token: params.token0,
+        secret: secretA,
+        nullifier: nullifierA,
+        amount_low: outALow.toString(),
+        amount_high: outAHigh.toString(),
+        token: tokenA,
       },
       output_note_1: {
-        secret: out1Secret,
-        nullifier: out1Nullifier,
-        amount_low: out1Low.toString(),
-        amount_high: out1High.toString(),
-        token: params.token1,
+        secret: secretB,
+        nullifier: nullifierB,
+        amount_low: outBLow.toString(),
+        amount_high: outBHigh.toString(),
+        token: tokenB,
       },
       liquidity: Number(params.liquidity),
     });
@@ -126,16 +141,16 @@ export async function burn(
         }
       },
       outputNote0: {
-        secret: out0Secret,
-        nullifier: out0Nullifier,
-        amount: params.amount0Out,
-        token: params.token0,
+        secret: secretA,
+        nullifier: nullifierA,
+        amount: amtA,
+        token: tokenA,
       },
       outputNote1: {
-        secret: out1Secret,
-        nullifier: out1Nullifier,
-        amount: params.amount1Out,
-        token: params.token1,
+        secret: secretB,
+        nullifier: nullifierB,
+        amount: amtB,
+        token: tokenB,
       },
     });
 
@@ -149,8 +164,8 @@ export async function burn(
     response = {
       new_commitment_0: circuitInputs.newCommitment0,
       new_commitment_1: circuitInputs.newCommitment1,
-      amount_0: params.amount0Out.toString(),
-      amount_1: params.amount1Out.toString(),
+      amount_0: amtA.toString(),
+      amount_1: amtB.toString(),
       calldata: [],
       final_root: proofRes.root,
     };
@@ -162,12 +177,12 @@ export async function burn(
   // The ASP echoes back the amounts it used in the ZK proof — these are authoritative.
   const actual0 = BigInt(response.amount_0);
   if (actual0 > 0n) {
-    noteManager.updateNote(out0Nullifier, response.new_commitment_0, actual0);
+    noteManager.updateNote(nullifierA, response.new_commitment_0, actual0);
   }
 
   const actual1 = BigInt(response.amount_1);
   if (actual1 > 0n) {
-    noteManager.updateNote(out1Nullifier, response.new_commitment_1, actual1);
+    noteManager.updateNote(nullifierB, response.new_commitment_1, actual1);
   }
 
   // Sync leaf indexes from ASP for output notes

@@ -140,6 +140,56 @@ export function estimateSwapOutputSafe(
 }
 
 /**
+ * Estimate swap output amount using constant-product formula (on-chain logic).
+ *
+ * @param reserveIn   Input token reserve
+ * @param reserveOut  Output token reserve
+ * @param amountIn    Exact input amount
+ * @param feePips     Fee in pips (e.g. 3000 = 0.3%)
+ * @returns Estimated output amount
+ */
+export function estimateSwapOutputConstantProduct(
+  reserveIn: bigint,
+  reserveOut: bigint,
+  amountIn: bigint,
+  feePips: number,
+): bigint {
+  if (amountIn === 0n || reserveIn === 0n || reserveOut === 0n) return 0n;
+
+  const FEE_DENOM = 1_000_000n;
+  const feeAdjusted = FEE_DENOM - BigInt(feePips);
+  const amountInAfterFee = (amountIn * feeAdjusted) / FEE_DENOM;
+  const numerator = reserveOut * amountInAfterFee;
+  const denominator = reserveIn + amountInAfterFee;
+
+  return numerator / denominator;
+}
+
+/**
+ * Estimate swap output using constant-product formula with a conservative slippage buffer.
+ *
+ * @param reserveIn   Input token reserve
+ * @param reserveOut  Output token reserve
+ * @param amountIn    Exact input amount
+ * @param feePips     Fee in pips (e.g. 3000 = 0.3%)
+ * @param slippageBps Slippage buffer in basis points (default 100 = 1%)
+ * @returns Estimated output amount reduced by slippage buffer
+ */
+export function estimateSwapOutputConstantProductSafe(
+  reserveIn: bigint,
+  reserveOut: bigint,
+  amountIn: bigint,
+  feePips: number,
+  slippageBps: number = 100,
+): bigint {
+  const raw = estimateSwapOutputConstantProduct(reserveIn, reserveOut, amountIn, feePips);
+  if (raw === 0n) return 0n;
+  const slippageDenom = 10_000n;
+  return (raw * (slippageDenom - BigInt(slippageBps))) / slippageDenom;
+}
+
+
+/**
  * Calculate the token amounts returned when burning liquidity from a position.
  *
  * @param sqrtPrice   Current pool sqrt price (Q128.128)

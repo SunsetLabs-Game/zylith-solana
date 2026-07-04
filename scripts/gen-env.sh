@@ -20,6 +20,7 @@ fi
 
 FRONTEND_ENV="$ROOT_DIR/frontend/.env.local"
 ASP_ENV="$ROOT_DIR/asp/.env"
+AGENT_ENV="$ROOT_DIR/my-agent/.env"
 
 awk '
   /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
@@ -51,6 +52,10 @@ awk '
   }
 ' "$SOURCE_ENV" > "$ASP_ENV"
 
+# Generate agent env
+cat "$SOURCE_ENV" > "$AGENT_ENV"
+
 echo "Generated:"
 echo "  - $FRONTEND_ENV"
 echo "  - $ASP_ENV"
+echo "  - $AGENT_ENV"

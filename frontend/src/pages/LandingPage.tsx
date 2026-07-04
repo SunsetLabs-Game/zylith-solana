@@ -162,6 +162,100 @@ export function LandingPage() {
           </div>
         </motion.section>
 
+        {/* Technical Architecture & Specs */}
+        <motion.section
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="mx-auto w-full max-w-7xl px-8 pb-48"
+        >
+          <div className="border-t border-white/5 pt-24 space-y-24">
+            {/* Protocol Specs Header */}
+            <div className="text-center max-w-3xl mx-auto space-y-6">
+              <h2 className="text-4xl md:text-5xl font-heading uppercase tracking-tight text-foreground">
+                Zero-Knowledge Protocol Spec
+              </h2>
+              <p className="text-muted-foreground/80 leading-relaxed font-light text-lg">
+                Zylith integrates concentrated liquidity math with Groth16 zk-SNARK proofs, decoupling on-chain execution state from user identity.
+              </p>
+            </div>
+
+            {/* Architecture Steps */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              {[
+                {
+                  step: "01",
+                  title: "Shield Assets",
+                  desc: "Assets are deposited into the Solana pool program. A Poseidon hash of the amount, secret, and nullifier creates a secure private note commitment."
+                },
+                {
+                  step: "02",
+                  title: "ZK Proving",
+                  desc: "Circuits verify balance, ownership, and range constraints locally in-browser or delegated to our high-speed ASP node, generating Groth16 proofs."
+                },
+                {
+                  step: "03",
+                  title: "State Sync",
+                  desc: "The ASP backend tracks transactions, verifies commitments against the local database, and updates the global Merkle tree state."
+                },
+                {
+                  step: "04",
+                  title: "Settlement",
+                  desc: "The Relayer signs and submits proofs to the coordinator on-chain, settled in sub-seconds with full privacy preservation."
+                }
+              ].map((item, i) => (
+                <div key={i} className="p-8 rounded-3xl border border-white/5 bg-white/[0.01] backdrop-blur-xl relative">
+                  <span className="text-xs font-heading font-bold text-primary tracking-widest uppercase block mb-6">{item.step} &bull; Phase</span>
+                  <h4 className="text-2xl font-heading text-foreground mb-4 uppercase tracking-tight">{item.title}</h4>
+                  <p className="text-muted-foreground/60 leading-relaxed font-light text-sm">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Deep Technical Spec Box */}
+            <div className="p-12 rounded-[48px] border border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-transparent backdrop-blur-3xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="space-y-6">
+                <h3 className="text-3xl font-heading text-foreground uppercase tracking-tight">Protected Concentrated Liquidity</h3>
+                <p className="text-muted-foreground/75 leading-relaxed font-light text-base">
+                  Concentrated Liquidity Market Makers (CLMMs) normally expose exact positions, ranges, and sizes, making LPs targets for sandwich attacks and just-in-time (JIT) liquidity manipulation. 
+                </p>
+                <p className="text-muted-foreground/75 leading-relaxed font-light text-base">
+                  Zylith shields the tick ranges, liquidity coefficients, and token quantities of your positions inside a privacy pool. Your yield-generating assets remain completely anonymous while earning active market maker fees.
+                </p>
+                <div className="flex gap-10 pt-4">
+                  <div>
+                    <span className="text-3xl font-heading font-bold text-foreground block">Poseidon</span>
+                    <span className="text-[10px] font-heading tracking-widest text-muted-foreground uppercase">Hashing Algorithm</span>
+                  </div>
+                  <div>
+                    <span className="text-3xl font-heading font-bold text-foreground block">Groth16</span>
+                    <span className="text-[10px] font-heading tracking-widest text-muted-foreground uppercase">Proving System</span>
+                  </div>
+                  <div>
+                    <span className="text-3xl font-heading font-bold text-foreground block">&lt; 1.2s</span>
+                    <span className="text-[10px] font-heading tracking-widest text-muted-foreground uppercase">Local Prove Time</span>
+                  </div>
+                </div>
+              </div>
+              <div className="border border-white/5 bg-black/40 rounded-3xl p-8 space-y-4 font-mono text-[11px] text-muted-foreground/80 overflow-x-auto">
+                <p className="text-primary font-bold">// Cryptographic Verification Parameters</p>
+                <p>Proving Key Size: 3,401,980 bytes</p>
+                <p>Public Inputs: 8 field elements [root, nullifier, tokens...]</p>
+                <p>Curve: BN254 (alt_bn128) scalar field</p>
+                <p>Verification Key Hash: sha256_checksum(...)</p>
+                <hr className="border-white/5 my-2" />
+                <p className="text-solana font-bold">// Solana Settlement State</p>
+                <p>Program ID: 4CNqqTnGEMYqWkE4VCS7cRy3tAJcrPGGMvM9dyFmJwp9</p>
+                <p>Merkle Tree Depth: 29 levels</p>
+                <p>Capacity: 536,870,912 unique shielded commitments</p>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
         {/* Footer */}
         <footer className="border-t border-white/5 py-24 bg-black/60 backdrop-blur-3xl">
           <div className="mx-auto max-w-7xl px-8 flex flex-col md:flex-row items-center justify-between gap-12">

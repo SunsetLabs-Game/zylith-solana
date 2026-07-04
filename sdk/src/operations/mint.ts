@@ -2,7 +2,7 @@
 import type { AspClient } from "../asp/client.js";
 import type { NoteManager } from "../storage/note-manager.js";
 import type { PoolKey } from "../types/index.js";
-import { u256Split, generateRandomSecret } from "../utils/conversions.js";
+import { u256Split, generateRandomSecret, tokenToBigInt2 } from "../utils/conversions.js";
 import { ClientProver } from "../prover/prover.js";
 import { formatProofForSolana } from "../utils/proof.js";
 import { generateMintInputs } from "../prover/inputs/mint.js";
@@ -53,10 +53,25 @@ export async function mint(
   const change1Secret = generateRandomSecret();
   const change1Nullifier = generateRandomSecret();
 
-  const { low: bal0Low, high: bal0High } = u256Split(BigInt(input0.amount));
-  const { low: bal1Low, high: bal1High } = u256Split(BigInt(input1.amount));
-  const { low: amt0Low, high: amt0High } = u256Split(params.amount0);
-  const { low: amt1Low, high: amt1High } = u256Split(params.amount1);
+  // Sort input notes and params numerically based on token BigInt representation
+  // This satisfies the token0 < token1 constraint in PrivateMint.circom
+  const note0IsToken0 = tokenToBigInt2(input0.token) < tokenToBigInt2(input1.token);
+
+  const noteA = note0IsToken0 ? input0 : input1;
+  const noteB = note0IsToken0 ? input1 : input0;
+
+  const amtA = note0IsToken0 ? params.amount0 : params.amount1;
+  const amtB = note0IsToken0 ? params.amount1 : params.amount0;
+
+  const changeSecretA = note0IsToken0 ? change0Secret : change1Secret;
+  const changeNullifierA = note0IsToken0 ? change0Nullifier : change1Nullifier;
+  const changeSecretB = note0IsToken0 ? change1Secret : change0Secret;
+  const changeNullifierB = note0IsToken0 ? change1Nullifier : change0Nullifier;
+
+  const { low: balALow, high: balAHigh } = u256Split(BigInt(noteA.amount));
+  const { low: balBLow, high: balBHigh } = u256Split(BigInt(noteB.amount));
+  const { low: amtALow, high: amtAHigh } = u256Split(amtA);
+  const { low: amtBLow, high: amtBHigh } = u256Split(amtB);
 
   let response: any = {};
   let solanaProof: Buffer | undefined;
@@ -70,20 +85,20 @@ export async function mint(
         tick_spacing: params.poolKey.tickSpacing,
       },
       input_note_0: {
-        secret: input0.secret,
-        nullifier: input0.nullifier,
-        balance_low: bal0Low.toString(),
-        balance_high: bal0High.toString(),
-        token: input0.token,
-        leaf_index: input0.leafIndex,
+        secret: noteA.secret,
+        nullifier: noteA.nullifier,
+        balance_low: balALow.toString(),
+        balance_high: balAHigh.toString(),
+        token: noteA.token,
+        leaf_index: noteA.leafIndex!,
       },
       input_note_1: {
-        secret: input1.secret,
-        nullifier: input1.nullifier,
-        balance_low: bal1Low.toString(),
-        balance_high: bal1High.toString(),
-        token: input1.token,
-        leaf_index: input1.leafIndex,
+        secret: noteB.secret,
+        nullifier: noteB.nullifier,
+        balance_low: balBLow.toString(),
+        balance_high: balBHigh.toString(),
+        token: noteB.token,
+        leaf_index: noteB.leafIndex!,
       },
       position: {
         secret: posSecret,
@@ -93,42 +108,42 @@ export async function mint(
         tick_upper: params.tickUpper,
       },
       amounts: {
-        amount0_low: amt0Low.toString(),
-        amount0_high: amt0High.toString(),
-        amount1_low: amt1Low.toString(),
-        amount1_high: amt1High.toString(),
+        amount0_low: amtALow.toString(),
+        amount0_high: amtAHigh.toString(),
+        amount1_low: amtBLow.toString(),
+        amount1_high: amtBHigh.toString(),
       },
-      change_note_0: { secret: change0Secret, nullifier: change0Nullifier },
-      change_note_1: { secret: change1Secret, nullifier: change1Nullifier },
+      change_note_0: { secret: changeSecretA, nullifier: changeNullifierA },
+      change_note_1: { secret: changeSecretB, nullifier: changeNullifierB },
       liquidity: Number(params.liquidity),
     });
   } else {
     // 1. Fetch the Merkle tree state from ASP
-    const proofRes0 = await asp.getTreePath(input0.leafIndex);
-    const proofRes1 = await asp.getTreePath(input1.leafIndex);
+    const proofResA = await asp.getTreePath(noteA.leafIndex!);
+    const proofResB = await asp.getTreePath(noteB.leafIndex!);
     
     // 2. Generate circuit inputs
     const circuitInputs = generateMintInputs({
       inputNote0: {
-        secret: input0.secret,
-        nullifier: input0.nullifier,
-        balance: BigInt(input0.amount),
-        token: input0.token,
+        secret: noteA.secret,
+        nullifier: noteA.nullifier,
+        balance: BigInt(noteA.amount),
+        token: noteA.token,
         merkleProof: {
-          root: proofRes0.root,
-          pathElements: proofRes0.path_elements,
-          pathIndices: proofRes0.path_indices,
+          root: proofResA.root,
+          pathElements: proofResA.path_elements,
+          pathIndices: proofResA.path_indices,
         }
       },
       inputNote1: {
-        secret: input1.secret,
-        nullifier: input1.nullifier,
-        balance: BigInt(input1.amount),
-        token: input1.token,
+        secret: noteB.secret,
+        nullifier: noteB.nullifier,
+        balance: BigInt(noteB.amount),
+        token: noteB.token,
         merkleProof: {
-          root: proofRes1.root,
-          pathElements: proofRes1.path_elements,
-          pathIndices: proofRes1.path_indices,
+          root: proofResB.root,
+          pathElements: proofResB.path_elements,
+          pathIndices: proofResB.path_indices,
         }
       },
       position: {
@@ -138,10 +153,10 @@ export async function mint(
         tickUpper: params.tickUpper,
         liquidity: params.liquidity,
       },
-      amount0: params.amount0,
-      amount1: params.amount1,
-      changeNote0: { secret: change0Secret, nullifier: change0Nullifier },
-      changeNote1: { secret: change1Secret, nullifier: change1Nullifier },
+      amount0: amtA,
+      amount1: amtB,
+      changeNote0: { secret: changeSecretA, nullifier: changeNullifierA },
+      changeNote1: { secret: changeSecretB, nullifier: changeNullifierB },
     });
 
     // 3. Generate proof locally
@@ -155,7 +170,7 @@ export async function mint(
     response = {
       position_commitment: circuitInputs.positionCommitment,
       calldata: [],
-      final_root: proofRes0.root,
+      final_root: proofResA.root,
     };
     
     // snarkjs returns public signals in order.
@@ -177,22 +192,22 @@ export async function mint(
     commitment: response.position_commitment,
   });
 
-  const change0Amount = BigInt(input0.amount) - params.amount0;
+  const change0Amount = BigInt(noteA.amount) - amtA;
   if (change0Amount > 0n) {
     noteManager.addNote({
-      secret: change0Secret,
-      nullifier: change0Nullifier,
+      secret: changeSecretA,
+      nullifier: changeNullifierA,
       amount: change0Amount,
-      token: input0.token,
+      token: noteA.token,
     });
   }
-  const change1Amount = BigInt(input1.amount) - params.amount1;
+  const change1Amount = BigInt(noteB.amount) - amtB;
   if (change1Amount > 0n) {
     noteManager.addNote({
-      secret: change1Secret,
-      nullifier: change1Nullifier,
+      secret: changeSecretB,
+      nullifier: changeNullifierB,
       amount: change1Amount,
-      token: input1.token,
+      token: noteB.token,
     });
   }
 

@@ -51,6 +51,8 @@ export function DepositCard() {
     }
   };
 
+  const cooldownSeconds = useSdkStore((s) => s.cooldownSeconds);
+
   return (
     <div className="space-y-4 w-full max-w-xl mx-auto flex flex-col min-h-0">
       <Card className="shrink-0 relative overflow-visible border-white/5 bg-card/40 backdrop-blur-3xl p-0">
@@ -84,10 +86,14 @@ export function DepositCard() {
               size="lg"
               className="w-full h-16 rounded-2xl bg-gradient-to-r from-solana via-primary to-primary border-none shadow-[0_0_30px_rgba(20,241,149,0.1)]"
               onClick={handleDeposit}
-              disabled={!amount || !isInitialized || !isConnected || deposit.isPending}
+              disabled={!amount || !isInitialized || !isConnected || deposit.isPending || cooldownSeconds > 0}
               loading={deposit.isPending}
             >
-              {deposit.isPending ? "SHIELDING" : `SHIELD ${selectedToken?.symbol}`}
+              {deposit.isPending 
+                ? "SHIELDING" 
+                : cooldownSeconds > 0 
+                  ? `SYNCING WITH ASP (${cooldownSeconds}s)` 
+                  : `SHIELD ${selectedToken?.symbol}`}
             </Button>
           </div>
         </div>

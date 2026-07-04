@@ -51,3 +51,12 @@ contracts/anchor/scratch/
 contracts/anchor/deploy-key.json
 node_modules/
 .anchor/
+.vercel
+
+# Circuit build artifacts — explicitly un-ignore WASM + zkeys needed by Railway ASP
+# (circuits/.gitignore excludes the build/ dir; negate here so Railway uploads include them)
+!circuits/build/**/*.wasm
+!circuits/build/**/*.zkey
+!circuits/build/**/mint_js/
+!circuits/build/**/mint_js/**
+!circuits/build/**/verification_key.json

@@ -15,6 +15,8 @@ export interface PoolState {
   feeGrowthGlobal1: bigint;
   protocolFees0: bigint;
   protocolFees1: bigint;
+  reserve0: bigint;
+  reserve1: bigint;
 }
 
 /** LP position returned by the active Solana pool reader. */

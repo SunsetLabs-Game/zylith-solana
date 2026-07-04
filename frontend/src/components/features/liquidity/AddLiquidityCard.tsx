@@ -18,6 +18,7 @@ const STORAGE_KEY = "zylith_recent_liquidity";
 export function AddLiquidityCard() {
   const isInitialized = useSdkStore((s) => s.isInitialized);
   const unspentNotes = useSdkStore((s) => s.unspentNotes);
+  const cooldownSeconds = useSdkStore((s) => s.cooldownSeconds);
   const [amount0, setAmount0] = useState("");
   const [amount1, setAmount1] = useState("");
   const [token0] = useState(TESTNET_TOKENS[0] ?? null);
@@ -138,10 +139,14 @@ export function AddLiquidityCard() {
             size="lg"
             className="w-full h-16 rounded-2xl bg-gradient-to-r from-solana via-primary to-solana-purple border-none shadow-[0_0_30px_rgba(20,241,149,0.15)]"
             onClick={handleAddLiquidity}
-            disabled={!canAddLiquidity}
+            disabled={!canAddLiquidity || cooldownSeconds > 0}
             loading={isPending}
           >
-            {isPending ? "PROVIDING LIQUIDITY" : "INITIALIZE POSITION"}
+            {isPending 
+              ? "PROVIDING LIQUIDITY" 
+              : cooldownSeconds > 0 
+                ? `SYNCING WITH ASP (${cooldownSeconds}s)` 
+                : "INITIALIZE POSITION"}
           </Button>
         </div>
       </Card>

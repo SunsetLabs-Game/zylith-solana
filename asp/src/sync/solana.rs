@@ -37,31 +37,39 @@ async fn sync_once(state: &Arc<AppState>, rpc_client: &RpcClient) -> Result<(), 
 
     let last_sig = state.db.get_sync_state(LAST_SYNCED_SIG_KEY)?;
 
-    // 1. Get signatures for the coordinator program
-    let signatures = rpc_client
-        .get_signatures_for_address(&coordinator_pubkey)
-        .map_err(|e| AspError::RpcError(format!("Failed to get signatures: {e}")))?;
+    let mut signatures = Vec::new();
+    let mut before_sig: Option<solana_sdk::signature::Signature> = None;
+    let until_sig = last_sig.as_ref().and_then(|s| solana_sdk::signature::Signature::from_str(s).ok());
+
+    loop {
+        let config = solana_client::rpc_client::GetConfirmedSignaturesForAddress2Config {
+            before: before_sig,
+            until: until_sig,
+            limit: None,
+            commitment: Some(CommitmentConfig::confirmed()),
+        };
+        let page = rpc_client
+            .get_signatures_for_address_with_config(&coordinator_pubkey, config)
+            .map_err(|e| AspError::RpcError(format!("Failed to get signatures: {e}")))?;
+
+        if page.is_empty() {
+            break;
+        }
+
+        let last_sig_in_page = page.last().map(|s| s.signature.clone());
+        signatures.extend(page);
+
+        if last_sig_in_page.is_none() {
+            break;
+        }
+        before_sig = last_sig_in_page.and_then(|s| solana_sdk::signature::Signature::from_str(&s).ok());
+    }
 
     if signatures.is_empty() {
         return Ok(());
     }
 
-    // Process only signatures newer than last_sig
-    let mut signatures_to_process = Vec::new();
-    if let Some(ref last) = last_sig {
-        for sig_info in signatures {
-            if sig_info.signature == *last {
-                break;
-            }
-            signatures_to_process.push(sig_info);
-        }
-    } else {
-        signatures_to_process = signatures;
-    }
-
-    if signatures_to_process.is_empty() {
-        return Ok(());
-    }
+    let signatures_to_process = signatures;
 
     // Process from oldest to newest
     for sig_info in signatures_to_process.into_iter().rev() {

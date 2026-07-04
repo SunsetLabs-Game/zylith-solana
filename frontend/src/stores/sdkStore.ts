@@ -16,6 +16,7 @@ interface SdkState {
   balances: Record<string, bigint>;
   unspentNotes: Note[];
   unspentPositions: PositionNote[];
+  cooldownSeconds: number;
 
   // Actions
   checkExistingNotes: () => void;
@@ -25,6 +26,7 @@ interface SdkState {
   syncNotes: () => Promise<void>;
   lock: () => void;
   resetVault: () => void;
+  startCooldown: (seconds: number) => void;
 }
 
 export const useSdkStore = create<SdkState>((set, get) => ({
@@ -37,6 +39,7 @@ export const useSdkStore = create<SdkState>((set, get) => ({
   balances: {},
   unspentNotes: [],
   unspentPositions: [],
+  cooldownSeconds: 0,
 
   checkExistingNotes: () => {
     const exists = localStorage.getItem(NOTES_STORAGE_KEY) !== null;
@@ -191,7 +194,7 @@ export const useSdkStore = create<SdkState>((set, get) => ({
     // Compute balances per token
     const balances: Record<string, bigint> = {};
     for (const note of notes) {
-      const token = note.token;
+      const token = note.token.toLowerCase();
       const amount = BigInt(note.amount);
       balances[token] = (balances[token] ?? 0n) + amount;
     }
@@ -226,5 +229,18 @@ export const useSdkStore = create<SdkState>((set, get) => ({
       unspentPositions: [],
     });
     window.location.reload();
+  },
+
+  startCooldown: (seconds: number) => {
+    set({ cooldownSeconds: seconds });
+    const interval = setInterval(() => {
+      const current = get().cooldownSeconds;
+      if (current <= 1) {
+        clearInterval(interval);
+        set({ cooldownSeconds: 0 });
+      } else {
+        set({ cooldownSeconds: current - 1 });
+      }
+    }, 1000);
   },
 }));

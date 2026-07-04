@@ -1,15 +1,15 @@
-# Build artifacts
-build/
-*.r1cs
-*.wasm
-*.sym
-*.zkey
-*.json.ptau
-*.vkey
-*.pkey
+# Build artifacts — ignore intermediate files but KEEP final artifacts
+# (mint.wasm, circuit_final.zkey, mint_js/, verification_key.json) needed by the ASP server
+build/**/*.r1cs
+build/**/*.sym
+build/**/*.json
+!build/**/verification_key.json
+build/**/pot*.ptau
 
-# Verification keys
-verification_key.json
+# Verification / proving keys checked in at root of build subdirs
+# (do NOT ignore *.zkey and *.wasm — they are required by Railway)
+
+# Verification keys (only at root circuits/, not inside build/)
 proving_key.json
 
 # Node modules

@@ -16,11 +16,9 @@
     "noEmit": true,
     "ignoreDeprecations": "5.0",
     "paths": {
-      "@/*": ["./src/*"],
-      "@zylith/sdk": ["../sdk/src"]
+      "@/*": ["./src/*"]
     },
     "baseUrl": "."
   },
-  "include": ["src"],
-  "references": [{ "path": "../sdk" }]
+  "include": ["src"]
 }

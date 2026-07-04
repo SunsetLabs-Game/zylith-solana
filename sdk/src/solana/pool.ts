@@ -57,6 +57,8 @@ export class PoolReader {
       const sqrtPrice = sqrtPriceX96 << 32n; // convert Q64.96 to Q128.128
       const tick = getTickAtSqrtPrice(sqrtPriceX96);
       const liquidity = readU128LE(view, 136);
+      const reserve0 = view.getBigUint64(152, true);
+      const reserve1 = view.getBigUint64(160, true);
 
       return {
         sqrtPrice,
@@ -66,6 +68,8 @@ export class PoolReader {
         feeGrowthGlobal1: 0n,
         protocolFees0: 0n,
         protocolFees1: 0n,
+        reserve0,
+        reserve1,
       };
     } catch (err) {
       console.error("Failed to read pool state:", err);
@@ -78,6 +82,8 @@ export class PoolReader {
         feeGrowthGlobal1: 0n,
         protocolFees0: 0n,
         protocolFees1: 0n,
+        reserve0: 0n,
+        reserve1: 0n,
       };
     }
   }

@@ -23,6 +23,7 @@ interface BurnInput {
 export function useBurn() {
   const client = useSdkStore((s) => s.client);
   const refreshBalances = useSdkStore((s) => s.refreshBalances);
+  const startCooldown = useSdkStore((s) => s.startCooldown);
   const { execute, address } = useWalletSession();
   const { toast } = useToast();
 
@@ -58,6 +59,7 @@ export function useBurn() {
     },
     onSuccess: (data, variables) => {
       refreshBalances();
+      startCooldown(15);
       queryClient.invalidateQueries({
         queryKey: queryKeys.poolState(variables.poolKey),
       });

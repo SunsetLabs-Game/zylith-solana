@@ -1,5 +1,6 @@
 pub mod burn;
 pub mod deposit;
+pub mod faucet;
 pub mod mint;
 pub mod nullifier;
 pub mod status;

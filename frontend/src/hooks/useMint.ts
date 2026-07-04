@@ -24,6 +24,7 @@ interface MintInput {
 export function useMint() {
   const client = useSdkStore((s) => s.client);
   const refreshBalances = useSdkStore((s) => s.refreshBalances);
+  const startCooldown = useSdkStore((s) => s.startCooldown);
   const { execute, address } = useWalletSession();
   const { toast } = useToast();
 
@@ -59,6 +60,7 @@ export function useMint() {
     },
     onSuccess: (data, variables) => {
       refreshBalances();
+      startCooldown(15);
       queryClient.invalidateQueries({
         queryKey: queryKeys.poolState(variables.poolKey),
       });

@@ -1,0 +1,6 @@
+# Ignore build targets and node_modules for Vercel
+node_modules/
+**/node_modules/
+asp/target/
+contracts/anchor/target/
+.git/

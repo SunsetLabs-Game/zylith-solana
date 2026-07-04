@@ -14,6 +14,7 @@ interface WithdrawInput {
 export function useWithdraw() {
   const client = useSdkStore((s) => s.client);
   const refreshBalances = useSdkStore((s) => s.refreshBalances);
+  const startCooldown = useSdkStore((s) => s.startCooldown);
   const { address, execute } = useWalletSession();
   const { toast } = useToast();
 
@@ -53,6 +54,7 @@ export function useWithdraw() {
     },
     onSuccess: (data) => {
       refreshBalances();
+      startCooldown(15);
       queryClient.invalidateQueries({ queryKey: queryKeys.treeRoot() });
       toast(`Withdrawal confirmed: ${data.txHash.slice(0, 10)}...`, "success");
     },

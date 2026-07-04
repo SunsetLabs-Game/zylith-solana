@@ -20,6 +20,7 @@ fn base_router(state: Arc<AppState>) -> Router {
         .route("/swap", post(handlers::swap::shielded_swap))
         .route("/mint", post(handlers::mint::shielded_mint))
         .route("/burn", post(handlers::burn::shielded_burn))
+        .route("/faucet", post(handlers::faucet::request_tokens))
         // Tree queries
         .route("/tree/root", get(handlers::tree::get_root))
         .route("/tree/path/{leaf_index}", get(handlers::tree::get_path))

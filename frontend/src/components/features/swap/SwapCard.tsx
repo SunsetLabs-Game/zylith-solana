@@ -13,7 +13,7 @@ import { useSdkStore } from "@/stores/sdkStore";
 import { TESTNET_TOKENS, type Token } from "@/config/tokens";
 import { parseTokenAmount, formatTokenAmount, transactionExplorerUrl } from "@/lib/format";
 import { calculatePriceImpact, getPriceImpactVariant } from "@/lib/priceImpact";
-import { FEE_TIERS, estimateSwapOutputSafe } from "@zylith/sdk";
+import { FEE_TIERS, estimateSwapOutputConstantProductSafe } from "@zylith/sdk";
 import type { Note, PoolKey } from "@zylith/sdk";
 import { cn } from "@/lib/cn";
 import { motion, AnimatePresence } from "motion/react";
@@ -34,6 +34,7 @@ export function SwapCard() {
   const isInitialized = useSdkStore((s) => s.isInitialized);
   const unspentNotes = useSdkStore((s) => s.unspentNotes);
   const balances = useSdkStore((s) => s.balances);
+  const cooldownSeconds = useSdkStore((s) => s.cooldownSeconds);
 
   const [tokenIn, setTokenIn] = useState<Token>(TESTNET_TOKENS[0]);
   const [tokenOut, setTokenOut] = useState<Token | null>(TESTNET_TOKENS[1] ?? null);
@@ -94,7 +95,15 @@ export function SwapCard() {
   const estimatedOut = useMemo(() => {
     if (!poolState || parsedAmountIn === 0n || !tokenIn || !tokenOut) return 0n;
     const zeroForOne = tokenIn.address < tokenOut.address;
-    return estimateSwapOutputSafe(poolState.sqrtPrice, parsedAmountIn, zeroForOne, FEE_TIERS.MEDIUM.fee);
+    const reserveIn = zeroForOne ? poolState.reserve0 : poolState.reserve1;
+    const reserveOut = zeroForOne ? poolState.reserve1 : poolState.reserve0;
+    return estimateSwapOutputConstantProductSafe(
+      reserveIn,
+      reserveOut,
+      parsedAmountIn,
+      FEE_TIERS.MEDIUM.fee,
+      100 // 1% slippage
+    );
   }, [poolState, parsedAmountIn, tokenIn, tokenOut]);
 
   // Calculate price impact
@@ -169,11 +178,14 @@ export function SwapCard() {
       // Estimate expected output using current pool state with slippage buffer.
       let expectedOut = 0n;
       if (poolState) {
-        expectedOut = estimateSwapOutputSafe(
-          poolState.sqrtPrice,
+        const reserveIn = zeroForOne ? poolState.reserve0 : poolState.reserve1;
+        const reserveOut = zeroForOne ? poolState.reserve1 : poolState.reserve0;
+        expectedOut = estimateSwapOutputConstantProductSafe(
+          reserveIn,
+          reserveOut,
           parsedAmountIn,
-          zeroForOne,
           FEE_TIERS.MEDIUM.fee,
+          100 // 1% slippage buffer
         );
       }
 
@@ -193,7 +205,7 @@ export function SwapCard() {
           tokenIn: tokenIn.address,
           tokenOut: tokenOut.address,
           amountIn: parsedAmountIn,
-          amountOutMin: expectedOut * 9950n / 10000n, // 0.5% slippage tolerance
+          amountOutMin: expectedOut,
           expectedAmountOut: expectedOut,
           sqrtPriceLimit: priceLimit,
         },
@@ -366,10 +378,14 @@ export function SwapCard() {
             <Button
               size="lg"
               className="w-full h-20 rounded-[32px] text-lg font-heading tracking-widest uppercase bg-gradient-to-r from-solana-purple via-solana to-solana hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 shadow-[0_0_30px_rgba(153,69,255,0.3)] border-none"
-              disabled={usePublicSwap ? !canSwapPublic : !canSwapPrivate}
+              disabled={usePublicSwap ? !canSwapPublic || cooldownSeconds > 0 : !canSwapPrivate || cooldownSeconds > 0}
               onClick={() => setShowConfirm(true)}
             >
-              <BlurFadeText text={usePublicSwap ? "Execute Swap" : "Shielded Transaction"} isPublic={usePublicSwap} />
+              {cooldownSeconds > 0 ? (
+                `SYNCING WITH ASP (${cooldownSeconds}s)`
+              ) : (
+                <BlurFadeText text={usePublicSwap ? "Execute Swap" : "Shielded Transaction"} isPublic={usePublicSwap} />
+              )}
             </Button>
           </div>
         </div>
