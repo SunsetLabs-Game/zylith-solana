@@ -155,6 +155,33 @@ console.log(result.outputNote);   // the received token note
 console.log(result.changeNote);   // the change note (if any)
 ```
 
+#### Swap Output Estimation
+
+The SDK provides reserve-based constant-product estimation helpers that mirror the on-chain AMM formula exactly:
+
+```typescript
+import {
+  estimateSwapOutputConstantProduct,
+  estimateSwapOutputConstantProductSafe,
+} from "@zylith/sdk";
+
+// Raw estimation (no slippage buffer)
+const rawOut = estimateSwapOutputConstantProduct(
+  reserveIn,   // input token reserve (bigint)
+  reserveOut,  // output token reserve (bigint)
+  amountIn,    // exact input amount (bigint)
+  feePips,     // fee in pips (e.g. 3000 = 0.3%)
+);
+
+// With slippage buffer (default 1%)
+const safeOut = estimateSwapOutputConstantProductSafe(
+  reserveIn, reserveOut, amountIn, feePips,
+  100, // slippage in basis points (100 = 1%)
+);
+```
+
+> **Note:** The legacy `estimateSwapOutput` / `estimateSwapOutputSafe` functions (sqrt-price based) are still exported for backward compatibility, but the constant-product variants should be preferred — they match the on-chain `compute_swap_output` formula exactly.
+
 ---
 
 ### Mint (Liquidity)
@@ -253,7 +280,7 @@ const spent = await client.isNullifierSpent(nullifierHash);
 
 // Read pool state from Solana
 const pool = await client.getPoolState();
-console.log(pool.liquidity, pool.tickCurrent, pool.reserveToken0);
+console.log(pool.liquidity, pool.tick, pool.reserve0, pool.reserve1);
 ```
 
 ---

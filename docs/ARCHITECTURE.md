@@ -325,7 +325,10 @@ Here is the complete sequence for a user swapping token A → token B:
    → finds a note for token A with sufficient balance
 
 3. User enters swap amount; frontend calls SDK to estimate output
-   → SDK reads pool state from Solana (tick range, reserves, fee)
+   → SDK reads pool state from Solana (reserves, fee tier)
+   → estimates output using constant-product formula:
+     amountOut = reserveOut * amountInAfterFee / (reserveIn + amountInAfterFee)
+   → applies a 1% slippage buffer for the minimum output
    → returns estimated amountOut and price impact
 
 4. User confirms the swap
@@ -350,6 +353,7 @@ Here is the complete sequence for a user swapping token A → token B:
     - verifies Groth16 proof on-chain
     - checks NullifierRecord does not already exist
     - creates NullifierRecord (prevents double-spend)
+    - executes constant-product swap using on-chain reserves
     - creates 2 CommitmentAccounts (output note + change note)
     - updates pool reserves
 
