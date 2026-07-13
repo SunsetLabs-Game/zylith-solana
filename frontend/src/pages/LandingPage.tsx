@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import { motion } from "motion/react";
 import { AsciiWave } from "@/components/ui/ascii/ascii-wave";
@@ -5,7 +6,7 @@ import { AsciiSphere } from "@/components/ui/ascii/ascii-sphere";
 import { AsciiTorus } from "@/components/ui/ascii/ascii-torus";
 import { AsciiDna as AsciiDNA } from "@/components/ui/ascii/ascii-dna";
 import { SnakeButton } from "@/components/ui/SnakeButton";
-import { ArrowRight, Shield, Eye, EyeOff, Lock, Zap, BarChart3, Users, ShieldCheck, Code } from "lucide-react";
+import { ArrowRight, Shield, Eye, EyeOff, Lock, Zap, BarChart3, Users, ShieldCheck, Code, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const containerVariants = {
@@ -369,6 +370,9 @@ export function LandingPage() {
           </motion.div>
         </motion.section>
 
+        {/* ─── FAQ Section ─── */}
+        <FaqSection />
+
         {/* ─── Final CTA ─── */}
         <motion.section
           variants={containerVariants}
@@ -413,5 +417,111 @@ export function LandingPage() {
         </footer>
       </div>
     </div>
+  );
+}
+
+/* ─── FAQ Accordion ─── */
+
+const FAQ_ITEMS = [
+  {
+    q: "What is a CLMM?",
+    a: "CLMM stands for Concentrated Liquidity Market Maker. It's the technology behind modern decentralized exchanges like Uniswap v3. Instead of spreading your money evenly across all prices, you choose a specific price range — this makes your capital work harder and earn more fees. Zylith adds privacy on top of this, so nobody can see your positions or ranges.",
+  },
+  {
+    q: "What are zero-knowledge proofs?",
+    a: "A zero-knowledge proof is a way to prove something is true without revealing the details. For example, you can prove you have enough tokens to make a trade — without showing your actual balance, which tokens you hold, or who you are. Zylith uses a specific type called Groth16, which is fast enough to verify directly on Solana.",
+  },
+  {
+    q: "What is a shielded pool?",
+    a: "A shielded pool is like a private vault on the blockchain. When you deposit tokens, they become encrypted \"notes\" that only you can access. You can swap, provide liquidity, and withdraw — all without your activity being publicly visible. Think of it as the difference between a transparent piggy bank and a safe with a combination lock.",
+  },
+  {
+    q: "Is my money safe?",
+    a: "Yes. Your tokens are held by smart contracts on Solana — not by any company or team. Every transaction is verified by mathematical proofs directly on-chain. Nobody (including us) can move your funds. You can withdraw at any time with just your wallet.",
+  },
+  {
+    q: "What tokens does Zylith support?",
+    a: "Zylith is designed for the most liquid assets on Solana: Bitcoin wrappers (wBTC, cbBTC, tBTC) and stablecoins (USDC, USDT). These are the tokens that benefit most from trading privacy — high-value trades that attract bots and front-runners on public DEXes.",
+  },
+  {
+    q: "How is this different from a mixer?",
+    a: "Mixers just shuffle money around to hide its origin. Zylith is a full decentralized exchange with an AMM, liquidity pools, and yield — it just happens to be private. You're not hiding transactions, you're trading normally with privacy built into every operation.",
+  },
+  {
+    q: "Do I need any special wallet?",
+    a: "No. Zylith works with any Solana wallet — Phantom, Backpack, Solflare, and others. Just connect your wallet like you would on any other Solana app and start trading.",
+  },
+  {
+    q: "What does \"on-chain verified\" mean?",
+    a: "It means the Solana blockchain itself checks every proof. There's no backend server that decides if a transaction is valid. The smart contract reads the mathematical proof, verifies it's correct, and only then executes the trade. No humans in the loop, no trust required.",
+  },
+];
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <motion.div
+      variants={itemVariants}
+      className="border-b border-white/5 last:border-b-0"
+    >
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between gap-4 py-6 text-left group cursor-pointer"
+      >
+        <span className="text-lg md:text-xl font-heading text-foreground uppercase tracking-tight group-hover:text-primary transition-colors">
+          {q}
+        </span>
+        <ChevronDown
+          className={cn(
+            "w-5 h-5 text-muted-foreground/50 shrink-0 transition-transform duration-300",
+            open && "rotate-180 text-primary"
+          )}
+        />
+      </button>
+      <motion.div
+        initial={false}
+        animate={{
+          height: open ? "auto" : 0,
+          opacity: open ? 1 : 0,
+        }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="overflow-hidden"
+      >
+        <p className="text-muted-foreground/80 leading-relaxed text-[15px] pb-6 pr-12">
+          {a}
+        </p>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function FaqSection() {
+  return (
+    <motion.section
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-100px" }}
+      className="mx-auto w-full max-w-4xl px-8 pb-32"
+    >
+      <div className="text-center mb-16">
+        <motion.h2 variants={itemVariants} className="text-3xl md:text-5xl font-heading uppercase tracking-tight text-foreground mb-6">
+          Frequently asked questions
+        </motion.h2>
+        <motion.p variants={itemVariants} className="text-lg text-muted-foreground leading-relaxed">
+          New to private DeFi? Here's what you need to know.
+        </motion.p>
+      </div>
+
+      <motion.div
+        variants={itemVariants}
+        className="rounded-[32px] border border-white/5 bg-white/[0.02] backdrop-blur-xl p-8 md:p-10"
+      >
+        {FAQ_ITEMS.map((item, i) => (
+          <FaqItem key={i} q={item.q} a={item.a} />
+        ))}
+      </motion.div>
+    </motion.section>
   );
 }
